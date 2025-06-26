@@ -1,9 +1,10 @@
 from sys import argv, exit
+from cffi import FFI
 import cffi
 import os
 import re
 
-ffibuilder = cffi.FFI()
+ffibuilder = FFI()
 
 # C definitions for CFFI
 # We extract this directly from the header, with minor adjustments for CFFI if needed.
@@ -64,12 +65,8 @@ ffibuilder.cdef(CDEF_SOURCE)
 # For `ots_free_handle_object`, it takes `ots_handle_t*`, which is simpler for GC.
 
 SOURCE = """
-    #include "ots.h"
-    #include "ots-errors.h"
-
-    // Helper for ffi.gc to call ots_free_handle_object.
-    // ots_free_handle_object takes ots_handle_t*, which is convenient.
-    // No special wrapper needed if the Python side constructs the ots_handle_t struct for GC.
+#include "ots.h"
+#include "ots-errors.h"
 """
 
 ffibuilder.set_source(
@@ -108,5 +105,3 @@ if __name__ == "__main__":
     # using ffibuilder.compile(target="path/to/module.so", tmpdir="build_temp")
 
     ffibuilder.compile(verbose=True, target=os.path.join(output_dir, "_ots.so"), tmpdir=output_dir)
-    print(f"Build complete. Backend module should be in the current directory or system specific build location.")
-    print("If you get errors, ensure 'ots.h' is accessible and 'libots' is installed and linkable.")
