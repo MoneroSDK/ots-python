@@ -151,7 +151,7 @@ extern "C" {
                 void* ptr;                           /**< Pointer to data */
                 size_t size;                         /**< Size of data */
                 ots_data_type type;                  /**< Type of data */
-                bool reference;                      /**< If true, the handle does not own the object, don't free */
+                bool reference;                   /**< If true, the handle does not own the object, don't free */
             } data;
             bool boolean;                            /**< Boolean result */
             int64_t number;                          /**< Numeric result */
@@ -910,33 +910,6 @@ extern "C" {
         const ots_result_t* result,
         OTS_SEED_TYPE type
     );
-
-    /**
-     * @brief Check if a pointer is NULL
-     * @param[in] ptr Pointer to check
-     * @return true if pointer is NULL
-     */
-    //TODO bool ots_is_null(const void* ptr);
-
-    /**
-     * @brief Check if handle is of a specific type
-     * @param[in] handle Handle to check
-     * @param[in] type Type to check for
-     * @return true if handle is the specified type
-     */
-    /* TODO
-    bool ots_handle_is_type(
-        const ots_handle_t* handle,
-        ots_handle_type type
-    );
-    */
-
-    /**
-     * @brief Check if handle is a reference
-     * @param[in] handle Handle to check
-     * @return true if handle is a reference
-     */
-    //TODO bool ots_handle_is_reference(const ots_handle_t* handle);
 
     /*******************************************************************************
      * Memory Management Functions
@@ -2009,17 +1982,20 @@ extern "C" {
      * @brief Sign arbitrary data
      * @param[in] wallet Wallet handle
      * @param[in] data Data to sign
+     * @param[in] data_size Size of data to sign
      * @return Result containing signature
      */
     ots_result_t* ots_wallet_sign_data(
         const ots_handle_t* wallet,
-        const char* data
+        const char* data,
+        size_t data_size
     );
 
     /**
      * @brief Sign data with specific subaddress
      * @param[in] wallet Wallet handle
      * @param[in] data Data to sign
+     * @param[in] data_size Size of data to sign
      * @param[in] account Account index
      * @param[in] subaddr Subaddress index
      * @return Result containing signature string
@@ -2027,6 +2003,7 @@ extern "C" {
     ots_result_t* ots_wallet_sign_data_with_index(
         const ots_handle_t* wallet,
         const char* data,
+        size_t data_size,
         uint32_t account,
         uint32_t subaddr
     );
@@ -2035,6 +2012,7 @@ extern "C" {
      * @brief Sign data with specific address
      * @param[in] wallet Wallet handle
      * @param[in] data Data to sign
+     * @param[in] data_size Size of data to sign
      * @param[in] address Address to sign with
      * @return Result containing signature string
      * @throws OTS_ERROR_ADDRESS_NOT_FOUND if address not found in wallet
@@ -2042,6 +2020,7 @@ extern "C" {
     ots_result_t* ots_wallet_sign_data_with_address(
         const ots_handle_t* wallet,
         const char* data,
+        size_t data_size,
         const ots_handle_t* address
     );
 
@@ -2049,6 +2028,7 @@ extern "C" {
      * @brief Sign data with specific address
      * @param[in] wallet Wallet handle
      * @param[in] data Data to sign
+     * @param[in] data_size Size of data to sign
      * @param[in] address Address string to sign with
      * @return Result containing signature string
      * @throws OTS_ERROR_ADDRESS_NOT_FOUND if address not found in wallet
@@ -2056,6 +2036,7 @@ extern "C" {
     ots_result_t* ots_wallet_sign_data_with_address_string(
         const ots_handle_t* wallet,
         const char* data,
+        size_t data_size,
         const char* address
     );
 
@@ -2063,6 +2044,7 @@ extern "C" {
      * @brief Verify signed data for the wallet address with legacy support
      * @param[in] wallet Wallet handle
      * @param[in] data Original data
+     * @param[in] data_size Size of data to sign
      * @param[in] signature Signature to verify
      * @param[in] legacy_fallback Try legacy verification if modern fails
      * @return Result containing verification status
@@ -2070,6 +2052,7 @@ extern "C" {
     ots_result_t* ots_wallet_verify_data(
         const ots_handle_t* wallet,
         const char* data,
+        size_t data_size,
         const char* signature,
         bool legacy_fallback
     );
@@ -2078,6 +2061,7 @@ extern "C" {
      * @brief Verify signed data with specific subaddress
      * @param[in] wallet Wallet handle
      * @param[in] data Original data
+     * @param[in] data_size Size of data to sign
      * @param[in] account Account index  
      * @param[in] subaddr Subaddress index
      * @param[in] signature Signature to verify
@@ -2087,6 +2071,7 @@ extern "C" {
     ots_result_t* ots_wallet_verify_data_with_index(
         const ots_handle_t* wallet,
         const char* data,
+        size_t data_size,
         uint32_t account,
         uint32_t subaddr,
         const char* signature,
@@ -2097,6 +2082,7 @@ extern "C" {
      * @brief Verify signed data with specific address
      * @param[in] wallet Wallet handle
      * @param[in] data Original data
+     * @param[in] data_size Size of data to sign
      * @param[in] address Address handle to verify with
      * @param[in] signature Signature to verify
      * @param[in] legacy_fallback Try legacy verification if modern fails
@@ -2106,6 +2092,7 @@ extern "C" {
     ots_result_t* ots_wallet_verify_data_with_address(
         const ots_handle_t* wallet,
         const char* data,
+        size_t data_size,
         const ots_handle_t* address,
         const char* signature,
         bool legacy_fallback
@@ -2115,6 +2102,7 @@ extern "C" {
      * @brief Verify signed data with specific address
      * @param[in] wallet Wallet handle
      * @param[in] data Original data
+     * @param[in] data_size Size of data to sign
      * @param[in] address Address string to verify with
      * @param[in] signature Signature to verify
      * @param[in] legacy_fallback Try legacy verification if modern fails
@@ -2124,6 +2112,7 @@ extern "C" {
     ots_result_t* ots_wallet_verify_data_with_address_string(
         const ots_handle_t* wallet,
         const char* data,
+        size_t data_size,
         const char* address,
         const char* signature,
         bool legacy_fallback
@@ -2775,12 +2764,14 @@ extern "C" {
     /**
      * @brief Verify signed data
      * @param[in] data Original data
+     * @param[in] data_size Size of original data
      * @param[in] address Signer's address
      * @param[in] signature Signature to verify
      * @return Result containing verification status
      */
     ots_result_t* ots_verify_data(
         const char* data,
+        size_t data_size,
         const char* address,
         const char* signature
     );
