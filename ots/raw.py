@@ -16,7 +16,7 @@ class _opaque_handle_t:
         return self.ptrptr[0]
 
     @property
-    def type(self) -> str:
+    def cType(self) -> str:
         """
         Returns the type of the handle as a string.
         """
@@ -59,6 +59,13 @@ class ots_handle_t(_opaque_handle_t):
                 lib.ots_free_handle(self.ptrptr)
             ffi.release(self.ptrptr)
 
+    @property
+    def type(self) -> HandleType:
+        """
+        Returns the type of the handle as a HandleType enum.
+        """
+        return HandleType(self.ptr.type)
+
 class ots_tx_description_t(_opaque_handle_t):
     """
     Represents a transaction description in OTS.
@@ -97,7 +104,7 @@ def _unwrap(
 def _is_handle(handle: ots_handle_t | _CDataBase | None) -> bool:
     if (
         isinstance(handle, ots_handle_t)
-        and handle.type == 'ots_handle_t *'
+        and handle.cType == 'ots_handle_t *'
         and handle.ptr != ffi.NULL
     ):
         return True
@@ -108,7 +115,7 @@ def _is_handle(handle: ots_handle_t | _CDataBase | None) -> bool:
 
 def _is_result(result: ots_result_t | _CDataBase | None) -> bool:
     if isinstance(result, ots_result_t):
-        return result.type == 'ots_result_t *' and result.ptr != ffi.NULL
+        return result.cType == 'ots_result_t *' and result.ptr != ffi.NULL
     if isinstance(result, _CDataBase):
         return ffi.typeof(result) == ffi.typeof('ots_result_t *') and result != ffi.NULL
     return False
@@ -224,7 +231,7 @@ def ots_result_is_handle(result: ots_result_t | _CDataBase) -> bool:
     :return: True if the result is a handle, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return ots_result_is_handle(_unwrap(result))
+    return lib.ots_result_is_handle(_unwrap(result))
 
 
 def ots_result_is_wipeable_string(result: ots_result_t | _CDataBase) -> bool:
@@ -235,7 +242,7 @@ def ots_result_is_wipeable_string(result: ots_result_t | _CDataBase) -> bool:
     :return: True if the result is a wipeable string, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return ots_result_is_wipeable_string(_unwrap(result))
+    return lib.ots_result_is_wipeable_string(_unwrap(result))
 
 
 def ots_result_is_seed_indices(result: ots_result_t | _CDataBase) -> bool:
@@ -246,7 +253,7 @@ def ots_result_is_seed_indices(result: ots_result_t | _CDataBase) -> bool:
     :return: True if the result is a seed indices, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return ots_result_is_seed_indices(ffi.cast('ots_result_t*', _unwrap(result)))
+    return lib.ots_result_is_seed_indices(_unwrap(result)))
 
 
 def ots_result_is_seed_language(result: ots_result_t | _CDataBase) -> bool:
@@ -257,7 +264,7 @@ def ots_result_is_seed_language(result: ots_result_t | _CDataBase) -> bool:
     :return: True if the result is a seed language, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return ots_result_is_seed_language(_unwrap(result))
+    return lib.ots_result_is_seed_language(_unwrap(result))
 
 
 def ots_result_is_address(result: ots_result_t | _CDataBase) -> bool:
@@ -268,7 +275,7 @@ def ots_result_is_address(result: ots_result_t | _CDataBase) -> bool:
     :return: True if the result is an address, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return ots_result_is_address(ffi.cast('ots_result_t*', _unwrap(result)))
+    return lib.ots_result_is_address(ffi.cast('ots_result_t*', _unwrap(result)))
 
 
 def ots_result_is_seed(result: ots_result_t | _CDataBase) -> bool:
@@ -279,7 +286,7 @@ def ots_result_is_seed(result: ots_result_t | _CDataBase) -> bool:
     :return: True if the result is a seed, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return ots_result_is_seed(_unwrap(result))
+    return lib.ots_result_is_seed(_unwrap(result))
 
 
 def ots_result_is_wallet(result: ots_result_t | _CDataBase) -> bool:
@@ -290,7 +297,7 @@ def ots_result_is_wallet(result: ots_result_t | _CDataBase) -> bool:
     :return: True if the result is a wallet, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return ots_result_is_wallet(_unwrap(result))
+    return lib.ots_result_is_wallet(_unwrap(result))
 
 
 def ots_result_is_transaction(result: ots_result_t | _CDataBase) -> bool:
@@ -301,7 +308,7 @@ def ots_result_is_transaction(result: ots_result_t | _CDataBase) -> bool:
     :return: True if the result is a transaction, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return ots_result_is_transaction(_unwrap(result))
+    return lib.ots_result_is_transaction(_unwrap(result))
 
 
 def ots_result_is_transaction_description(result: ots_result_t | _CDataBase) -> bool:
@@ -312,7 +319,7 @@ def ots_result_is_transaction_description(result: ots_result_t | _CDataBase) -> 
     :return: True if the result is a transaction description, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return ots_result_is_transaction_description(_unwrap(result))
+    return lib.ots_result_is_transaction_description(_unwrap(result))
 
 
 def ots_result_is_transaction_warning(result: ots_result_t | _CDataBase) -> bool:
@@ -323,7 +330,7 @@ def ots_result_is_transaction_warning(result: ots_result_t | _CDataBase) -> bool
     :return: True if the result is a transaction warning, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return ots_result_is_transaction_warning(_unwrap(result))
+    return lib.ots_result_is_transaction_warning(_unwrap(result))
 
 
 def ots_result_is_string(result: ots_result_t | _CDataBase) -> bool:
@@ -1386,14 +1393,14 @@ def ots_wipeable_string_compare(
     return ots_result_t(lib.ots_wipeable_string_compare(_unwrap(str1), _unwrap(str2)))
 
 
-def ots_wipeable_string_c_str(string: ots_result_t | _CDataBase) -> str:
+def ots_wipeable_string_c_str(string: ots_handle_t | _CDataBase) -> str:
     """
     Returns the C-style string representation of a wipeable string.
 
     :param string: The wipeable string to convert.
     :return: The C-style string representation.
     """
-    assert isinstance(string, (ots_result_t, _CDataBase)), "string must be an instance of ots_result_t or _CDataBase"
+    assert isinstance(string, (ots_handle_t, _CDataBase)), "string must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_wrap(string).type) == HandleType.WIPEABLE_STRING, "string must be of type HandleType.WIPEABLE_STRING"
     return ffi.string(lib.ots_wipeable_string_c_str(_unwrap(string))).decode('utf-8')
 
@@ -2054,13 +2061,14 @@ def ots_monero_seed_create(
     """
     Creates a new Monero seed with the specified parameters.
 
-    :param random: Random bytes to use for seed creation.
+    :param random: Random 32 bytes to use for seed creation.
     :param height: The height at which the seed is created.
     :param time: The time at which the seed is created.
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
     :return: ots_result_t containing the created Monero seed.
     """
     assert isinstance(random, bytes), "random must be bytes"
+    assert len(random) == 32, "random must be exactly 32 bytes"
     assert isinstance(height, int), "height must be an integer"
     assert isinstance(time, int), "time must be an integer"
     assert isinstance(network, (Network, int)), "network must be an instance of Network or an integer"
@@ -2146,7 +2154,7 @@ def ots_polyseed_create(
     """
     Creates a new Polyseed with the specified parameters.
 
-    :param random: Random bytes to use for seed creation.
+    :param random: Random 19 bytes to use for seed creation.
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
     :param time: The time at which the seed is created, defaults to 0 (current time).
     :param passphrase: Optional passphrase for seed offset (empty string for none).

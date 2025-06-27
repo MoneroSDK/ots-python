@@ -1,5 +1,5 @@
 from enum import Enum
-from ots_cffi_build._ots import ffi, lib
+from ._ots import ffi, lib
 
 
 class Network(Enum):

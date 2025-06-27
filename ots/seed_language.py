@@ -13,6 +13,8 @@ class SeedLanguage:
     byType: dict[SeedType, set['SeedLanguage']] = {}
 
     def __init__(self, handle: ots_handle_t):
+        assert isinstance(handle, ots_handle_t), "handle must be an instance of ots_handle_t"
+        assert handle.type == HandleType.SEED_LANGUAGE, "handle must be of type SEED_LANGUAGE"
         self.handle: ots_handle_t = handle
         self._name: str | None = None
         self._english_name: str | None = None
@@ -109,7 +111,7 @@ class SeedLanguage:
         if isinstance(other, str):
             return self.code.tolower() == other.code.lower()
         if not isinstance(other, SeedLanguage):
-            return NotImplemented
+            raise NotImplementedError("other must be an instance of SeedLanguage or str")
         assert isinstance(other, SeedLanguage), "other must be an instance of SeedLanguage"
         print(HandleType(other.handle.ptr.type).name)
         assert HandleType(other.handle.ptr.type) == HandleType.SEED_LANGUAGE, "self must be a SeedLanguage instance"
