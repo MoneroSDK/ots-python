@@ -2,6 +2,8 @@ from .raw import *
 from .exceptions import OtsException
 from .wipeable_string import WipeableString
 from .seed_indices import SeedIndices
+from .seed_language import SeedLanguage
+from .wallet import Wallet
 from .address import Address
 from datetime import datetime
 
@@ -314,7 +316,7 @@ class MoneroSeed(Seed):
         phrase: str,
         height: int = 0,
         time: int = 0,
-        network: Network = Network.MAIN
+        network: Network = Network.MAIN,
         passphrase: str = ''
     ) -> 'MoneroSeed':
         """

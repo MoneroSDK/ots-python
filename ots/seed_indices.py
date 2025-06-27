@@ -16,7 +16,7 @@ class SeedIndices:
     def __len__(self) -> int:
         return self.count
 
-    def __add__(self, other: 'SeedIndices' | str) -> 'SeedIndices':
+    def __add__(self, other: 'SeedIndices | str') -> 'SeedIndices':
         """
         Combine two SeedIndices objects.
         """
@@ -67,6 +67,7 @@ class SeedIndices:
         """
         Append a seed index to the list.
         """
+        assert isinstance(value, int), "value must be an integer"
         result: ots_result_t = ots_seed_indices_append(self.handle, value)
         if ots_is_error(result):
             raise OtsException.from_result(result)
@@ -75,6 +76,7 @@ class SeedIndices:
         """
         Get the seed indices as a numeric string with a given separator.
         """
+        assert isinstance(separator, str), "separator must be of type str"
         result: ots_result_t = ots_seed_indices_numeric(self.handle, separator)
         if ots_is_error(result):
             raise OtsException.from_result(result)
@@ -84,17 +86,20 @@ class SeedIndices:
         """
         Get the seed indices as a hex string with a given separator.
         """
+        assert isinstance(separator, str), "separator must be of type str"
         result: ots_result_t = ots_seed_indices_hex(self.handle, separator)
         if ots_is_error(result):
             raise OtsException.from_result(result)
         return ots_result_string(result)
 
     @classmethod
-    def fromValues(cls, list[int]) -> 'SeedIndices':
+    def fromValues(cls, values: list[int]) -> 'SeedIndices':
         """
         Create a SeedIndices object from a list of integers.
         """
-        result: ots_result_t = ots_seed_indices_create(list)
+        assert isinstance(values, list), "values must be a list of integers"
+        assert all(isinstance(v, int) for v in values), "all values must be integers"
+        result: ots_result_t = ots_seed_indices_create(values)
         if ots_is_error(result):
             raise OtsException.from_result(result)
         return cls(ots_result_handle(result))
@@ -104,6 +109,8 @@ class SeedIndices:
         """
         Create a SeedIndices object from a string of integers separated by a given separator.
         """
+        assert isinstance(string, str), "string must be of type str"
+        assert isinstance(separator, str), "separator must be of type str"
         result: ots_result_t = ots_seed_indices_create_from_string(string, separator)
         if ots_is_error(result):
             raise OtsException.from_result(result)
@@ -114,6 +121,8 @@ class SeedIndices:
         """
         Create a SeedIndices object from a hex string of integers separated by a given separator.
         """
+        assert isinstance(string, str), "string must be of type str"
+        assert isinstance(separator, str), "separator must be of type str"
         result: ots_result_t = ots_seed_indices_create_from_hex(string, separator)
         if ots_is_error(result):
             raise OtsException.from_result(result)
