@@ -52,6 +52,7 @@ def load_header(header_file):
 CDEF_SOURCE = load_header("include/ots.h") + load_header("include/ots-errors.h")
 with open("ots_cdef.h", "w") as f:
     f.write(CDEF_SOURCE)
+    f.close()
 
 ffibuilder.cdef(CDEF_SOURCE)
 
