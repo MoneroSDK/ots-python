@@ -253,7 +253,7 @@ def ots_result_is_seed_indices(result: ots_result_t | _CDataBase) -> bool:
     :return: True if the result is a seed indices, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return lib.ots_result_is_seed_indices(_unwrap(result)))
+    return lib.ots_result_is_seed_indices(_unwrap(result))
 
 
 def ots_result_is_seed_language(result: ots_result_t | _CDataBase) -> bool:
@@ -2855,7 +2855,7 @@ def ots_wallet_sign_transaction(
 
 def ots_wallet_sign_data(
     wallet: ots_handle_t | _CDataBase,
-    data: str
+    data: bytes | str
 ) -> ots_result_t:
     """
     Signs data with the given wallet handle.
@@ -2866,13 +2866,15 @@ def ots_wallet_sign_data(
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(wallet).type) == HandleType.WALLET, "wallet must be of type HandleType.WALLET"
-    assert isinstance(data, str), "data must be a string"
-    return ots_result_t(lib.ots_wallet_sign_data(_unwrap(wallet), data.encode('utf-8')))
+    assert isinstance(data, (bytes, str)), "data must be bytes or a string"
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    return ots_result_t(lib.ots_wallet_sign_data(_unwrap(wallet), data, len(data)))
 
 
 def ots_wallet_sign_data_with_index(
     wallet: ots_handle_t | _CDataBase,
-    data: str,
+    data: bytes | str,
     account: int,
     subaddr: int
 ) -> ots_result_t:
@@ -2887,15 +2889,17 @@ def ots_wallet_sign_data_with_index(
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(wallet).type) == HandleType.WALLET, "wallet must be of type HandleType.WALLET"
-    assert isinstance(data, str), "data must be a string"
+    assert isinstance(data, (bytes, str)), "data must be bytes or a string"
     assert isinstance(account, int), "account must be an integer"
     assert isinstance(subaddr, int), "subaddr must be an integer"
-    return ots_result_t(lib.ots_wallet_sign_data_with_index(_unwrap(wallet), data.encode('utf-8'), account, subaddr))
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    return ots_result_t(lib.ots_wallet_sign_data_with_index(_unwrap(wallet), data, len(data), account, subaddr))
 
 
 def ots_wallet_sign_data_with_address(
     wallet: ots_handle_t | _CDataBase,
-    data: str,
+    data: bytes | str,
     address: ots_handle_t | _CDataBase
 ) -> ots_result_t:
     """
@@ -2908,15 +2912,17 @@ def ots_wallet_sign_data_with_address(
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(wallet).type) == HandleType.WALLET, "wallet must be of type HandleType.WALLET"
-    assert isinstance(data, str), "data must be a string"
+    assert isinstance(data, (bytes, str)), "data must be bytes or a string"
     assert isinstance(address, (ots_handle_t, _CDataBase)), "address must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(address).type) == HandleType.ADDRESS, "address must be of type HandleType.ADDRESS"
-    return ots_result_t(lib.ots_wallet_sign_data_with_address(_unwrap(wallet), data.encode('utf-8'), _unwrap(address)))
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    return ots_result_t(lib.ots_wallet_sign_data_with_address(_unwrap(wallet), data, len(data), _unwrap(address)))
 
 
 def ots_wallet_sign_data_with_address_string(
     wallet: ots_handle_t | _CDataBase,
-    data: str,
+    data: bytes | str,
     address: str
 ) -> ots_result_t:
     """
@@ -2929,15 +2935,15 @@ def ots_wallet_sign_data_with_address_string(
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(wallet).type) == HandleType.WALLET, "wallet must be of type HandleType.WALLET"
-    assert isinstance(data, str), "data must be a string"
+    assert isinstance(data, (bytes, str)), "data must be bytes or a string"
     assert isinstance(address, str), "address must be a string"
     return ots_result_t(lib.ots_wallet_sign_data_with_address_string(_unwrap(wallet), data.encode('utf-8'), address.encode('utf-8')))
 
 
 def ots_wallet_verify_data(
     wallet: ots_handle_t | _CDataBase,
-    data: str,
-    signature: str,
+    data: bytes | str,
+    signature: bytes | str,
     legacy_fallback: bool = False
 ) -> ots_result_t:
     """
@@ -2951,18 +2957,22 @@ def ots_wallet_verify_data(
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(wallet).type) == HandleType.WALLET, "wallet must be of type HandleType.WALLET"
-    assert isinstance(data, str), "data must be a string"
-    assert isinstance(signature, str), "signature must be a string"
+    assert isinstance(data, (bytes, str)), "data must be bytes or a string"
+    assert isinstance(signature, (bytes, str)), "signature must be bytes or a string"
     assert isinstance(legacy_fallback, bool), "legacy_fallback must be a boolean"
-    return ots_result_t(lib.ots_wallet_verify_data(_unwrap(wallet), data.encode('utf-8'), signature.encode('utf-8'), legacy_fallback))
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    if isinstance(signature, str):
+        signature = signature.encode('utf-8')
+    return ots_result_t(lib.ots_wallet_verify_data(_unwrap(wallet), data, len(data), signature, len(signature), legacy_fallback))
 
 
 def ots_wallet_verify_data_with_index(
     wallet: ots_handle_t | _CDataBase,
-    data: str,
+    data: bytes | str,
     account: int,
     subaddr: int,
-    signature: str,
+    signature: bytes | str,
     legacy_fallback: bool = False
 ) -> ots_result_t:
     """
@@ -2978,19 +2988,23 @@ def ots_wallet_verify_data_with_index(
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(wallet).type) == HandleType.WALLET, "wallet must be of type HandleType.WALLET"
-    assert isinstance(data, str), "data must be a string"
+    assert isinstance(data, (bytes, str)), "data must be bytes or a string"
     assert isinstance(account, int), "account must be an integer"
     assert isinstance(subaddr, int), "subaddr must be an integer"
-    assert isinstance(signature, str), "signature must be a string"
+    assert isinstance(signature, (bytes, str)), "signature must be bytes or a string"
     assert isinstance(legacy_fallback, bool), "legacy_fallback must be a boolean"
-    return ots_result_t(lib.ots_wallet_verify_data_with_index(_unwrap(wallet), data.encode('utf-8'), account, subaddr, signature.encode('utf-8'), legacy_fallback))
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    if isinstance(signature, str):
+        signature = signature.encode('utf-8')
+    return ots_result_t(lib.ots_wallet_verify_data_with_index(_unwrap(wallet), data, len(data), account, subaddr, signature, len(signature), legacy_fallback))
 
 
 def ots_wallet_verify_data_with_address(
     wallet: ots_handle_t | _CDataBase,
-    data: str,
+    data: bytes | str,
     address: ots_handle_t | _CDataBase,
-    signature: str,
+    signature: bytes | str,
     legacy_fallback: bool = False
 ) -> ots_result_t:
     """
@@ -3005,19 +3019,23 @@ def ots_wallet_verify_data_with_address(
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(wallet).type) == HandleType.WALLET, "wallet must be of type HandleType.WALLET"
-    assert isinstance(data, str), "data must be a string"
+    assert isinstance(data, (bytes, str)), "data must be bytes or a string"
     assert isinstance(address, (ots_handle_t, _CDataBase)), "address must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(address).type) == HandleType.ADDRESS, "address must be of type HandleType.ADDRESS"
-    assert isinstance(signature, str), "signature must be a string"
+    assert isinstance(signature, (bytes, str)), "signature must be bytes or a string"
     assert isinstance(legacy_fallback, bool), "legacy_fallback must be a boolean"
-    return ots_result_t(lib.ots_wallet_verify_data_with_address(_unwrap(wallet), data.encode('utf-8'), _unwrap(address), signature.encode('utf-8'), legacy_fallback))
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    if isinstance(signature, str):
+        signature = signature.encode('utf-8')
+    return ots_result_t(lib.ots_wallet_verify_data_with_address(_unwrap(wallet), data, len(data), _unwrap(address), signature, len(signature), legacy_fallback))
 
 
 def ots_wallet_verify_data_with_address_string(
     wallet: ots_handle_t | _CDataBase,
-    data: str,
+    data: bytes | str,
     address: str,
-    signature: str,
+    signature: bytes | str,
     legacy_fallback: bool = False
 ) -> ots_result_t:
     """
@@ -3032,11 +3050,15 @@ def ots_wallet_verify_data_with_address_string(
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(wallet).type) == HandleType.WALLET, "wallet must be of type HandleType.WALLET"
-    assert isinstance(data, str), "data must be a string"
+    assert isinstance(data, (bytes, str)), "data must be bytes or a string"
     assert isinstance(address, str), "address must be a string"
-    assert isinstance(signature, str), "signature must be a string"
+    assert isinstance(signature, (bytes, str)), "signature must be bytes or a string"
     assert isinstance(legacy_fallback, bool), "legacy_fallback must be a boolean"
-    return ots_result_t(lib.ots_wallet_verify_data_with_address_string(_unwrap(wallet), data.encode('utf-8'), address.encode('utf-8'), signature.encode('utf-8'), legacy_fallback))
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    if isinstance(signature, str):
+        signature = signature.encode('utf-8')
+    return ots_result_t(lib.ots_wallet_verify_data_with_address_string(_unwrap(wallet), data, len(data), address.encode('utf-8'), signature, len(signature), legacy_fallback))
 
 
 def ots_tx_description(
@@ -3905,7 +3927,7 @@ def ots_check_low_entropy(
     assert isinstance(size, int), "size must be an integer"
     assert size > 0, "size must be a positive integer"
     assert isinstance(min_entropy, float), "min_entropy must be a float"
-    return ots_result_t(lib.ots_check_low_entropy(data, len(data), min_entropy))
+    return ots_result_t(lib.ots_check_low_entropy(ffi.cast('uint8_t *', data), len(data), min_entropy))
 
 
 def ots_entropy_level(data: bytes) -> ots_result_t:
@@ -3916,7 +3938,7 @@ def ots_entropy_level(data: bytes) -> ots_result_t:
     :return: ots_result_t containing the entropy level.
     """
     assert isinstance(data, bytes), "data must be a bytes object"
-    return ots_result_t(lib.ots_entropy_level(data), len(data))
+    return ots_result_t(lib.ots_entropy_level(ffi.cast('uint8_t *', data), len(data)))
 
 
 def ots_set_enforce_entropy(enforce: bool) -> None:
@@ -3982,32 +4004,34 @@ def ots_reset_max_depth() -> None:
     lib.ots_reset_max_depth()
 
 
-def ots_get_max_account_depth(depth: int) -> int:
+def ots_get_max_account_depth(default: int = 0) -> int:
     """
-    Returns the maximum account depth.
+    Returns the maximum account default.
 
-    :param depth: The current account depth.
-    :return: An integer representing the maximum account depth.
+    :param default: The current account default.
+    :return: An integer representing the maximum account default.
     """
-    assert isinstance(depth, int), "depth must be an integer"
-    return lib.ots_get_max_account_depth(depth)
+    assert isinstance(default, int), "default must be an integer"
+    assert default >= 0, "default must be a non-negative integer"
+    return lib.ots_get_max_account_depth(default)
 
 
-def ots_get_max_index_depth(depth: int) -> int:
+def ots_get_max_index_depth(default: int = 0) -> int:
     """
     Returns the maximum index depth.
 
-    :param depth: The current index depth.
+    :param default: The default return default if values are not set.
     :return: An integer representing the maximum index depth.
     """
-    assert isinstance(depth, int), "depth must be an integer"
-    return lib.ots_get_max_index_depth(depth)
+    assert isinstance(default, int), "depth must be an integer"
+    assert default >= 0, "depth must be a non-negative integer"
+    return lib.ots_get_max_index_depth(default)
 
 
 def ots_verify_data(
-    data: str,
+    data: bytes | str,
     address: str,
-    signature: str
+    signature: bytes | str
 ) -> ots_result_t:
     """
     Verifies the provided data against the given address and signature.
@@ -4017,7 +4041,11 @@ def ots_verify_data(
     :param signature: The signature to verify.
     :return: ots_result_t indicating the result of the verification.
     """
-    assert isinstance(data, str), "data must be a string"
+    assert isinstance(data, (bytes, str)), "data must be bytes or a string"
     assert isinstance(address, str), "address must be a string"
-    assert isinstance(signature, str), "signature must be a string"
-    return ots_result_t(lib.ots_verify_data(data.encode('utf-8'), address.encode('utf-8'), signature.encode('utf-8')))
+    assert isinstance(signature, (bytes, str)), "signature must be bytes or a string"
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    if isinstance(signature, str):
+        signature = signature.encode('utf-8')
+    return ots_result_t(lib.ots_verify_data(data, len(data), address.encode('utf-8'), signature, len(signature)))
