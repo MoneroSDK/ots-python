@@ -3,6 +3,9 @@ from .exceptions import OtsException
 
 
 class Address:
+    """
+    Represents a Monero address.
+    """
 
     def __init__(self, handle: ots_handle_t):
         """
@@ -186,7 +189,15 @@ class Address:
 
 class AddressString:
     """
-    A class for handling Monero address strings, without creating an Address object.
+    An helper class for handling Monero address strings,
+    without creating an Address object.
+
+    :information: Internally every time in the OTS library
+    and Address object is created from a string, it is for
+    convinience, but instead of using various methods for
+    the same address string, it takes less resources simply
+    creating a Address object with `Address.fromString(address)`
+    and then using its methods directly on the object.
     """
 
     @classmethod

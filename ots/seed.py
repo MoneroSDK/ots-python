@@ -28,7 +28,7 @@ class Seed:
         self._wallet: Wallet | None = None
 
     def __str__(self):
-        return f"Seed(handle={self.handle})"
+        return self.fingerprint
 
     def __repr__(self):
         return f"Seed({str(self)})"
@@ -74,12 +74,12 @@ class Seed:
         :return: A WipeableString containing the seed phrase.
         """
         assert isinstance(language, SeedLanguage), "language must be an instance of SeedLanguage"
-        assert language.supported(self.type()), "language must be supported by the OTS library"
+        assert language.supported(self.type), "language must be supported by the OTS library"
         assert password == '' or not self.isLegacy(), "password is not supported for legacy seeds"
         result: ots_result_t = ots_seed_phrase(self.handle, language.handle, password)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return WipeableString(ots_result_string(result))
+        return WipeableString(ots_result_handle(result))
 
     def indices(self, password: str = '') -> SeedIndices:
         """
@@ -106,7 +106,7 @@ class Seed:
         result: ots_result_t = ots_seed_fingerprint(self.handle)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        self._fingerprint = ots_result_string(result).decode('utf-8')
+        self._fingerprint = ots_result_string(result)
         return self._fingerprint
 
     @property
@@ -223,10 +223,10 @@ class LegacySeed(Seed):
         assert isinstance(height, int), "height must be an integer"
         assert isinstance(time, int), "time must be an integer"
         assert isinstance(network, Network), "network must be an instance of Network"
-        handle: ots_handle_t = ots_legacy_seed_decode(phrase, height, time, network)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        result: ots_result_t = ots_legacy_seed_decode(phrase, height, time, network)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))
 
     @classmethod
     def decodeIndices(
@@ -250,9 +250,9 @@ class LegacySeed(Seed):
         assert isinstance(time, int), "time must be an integer"
         assert isinstance(network, Network), "network must be an instance of Network"
         handle: ots_handle_t = ots_legacy_seed_decode_indices(indices.handle, height, time, network)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))
 
 
 class MoneroSeed(Seed):
@@ -282,10 +282,10 @@ class MoneroSeed(Seed):
         assert isinstance(height, int), "height must be an integer"
         assert isinstance(time, int), "time must be an integer"
         assert isinstance(network, Network), "network must be an instance of Network"
-        handle: ots_handle_t = ots_monero_seed_create(random, height, time, network)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        result: ots_result_t = ots_monero_seed_create(random, height, time, network)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))
 
     @classmethod
     def generate(
@@ -305,10 +305,10 @@ class MoneroSeed(Seed):
         assert isinstance(height, int), "height must be an integer"
         assert isinstance(time, int), "time must be an integer"
         assert isinstance(network, Network), "network must be an instance of Network"
-        handle: ots_handle_t = ots_monero_seed_generate(height, time, network)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        result: ots_result_t = ots_monero_seed_generate(height, time, network)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))
 
     @classmethod
     def decode(
@@ -334,10 +334,10 @@ class MoneroSeed(Seed):
         assert isinstance(time, int), "time must be an integer"
         assert isinstance(network, Network), "network must be an instance of Network"
         assert isinstance(passphrase, str), "passphrase must be a string"
-        handle: ots_handle_t = ots_monero_seed_decode(phrase, height, time, network, passphrase)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        result: ots_result_t = ots_monero_seed_decode(phrase, height, time, network, passphrase)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))
 
     @classmethod
     def decodeIndices(
@@ -363,10 +363,10 @@ class MoneroSeed(Seed):
         assert isinstance(time, int), "time must be an integer"
         assert isinstance(network, Network), "network must be an instance of Network"
         assert isinstance(passphrase, str), "passphrase must be a string"
-        handle: ots_handle_t = ots_monero_seed_decode_indices(indices.handle, height, time, network, passphrase)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        result: ots_result_t = ots_monero_seed_decode_indices(indices.handle, height, time, network, passphrase)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))
 
 
 class Polyseed(Seed):
@@ -397,10 +397,10 @@ class Polyseed(Seed):
         assert isinstance(network, Network), "network must be an instance of Network"
         assert isinstance(time, int), "time must be an integer"
         assert isinstance(passphrase, str), "passphrase must be a string"
-        handle: ots_handle_t = ots_polyseed_create(random, network, time, passphrase)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        result: ots_result_t = ots_polyseed_create(random, network, time, passphrase)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))
 
     @classmethod
     def generate(
@@ -420,10 +420,10 @@ class Polyseed(Seed):
         assert isinstance(network, Network), "network must be an instance of Network"
         assert isinstance(time, int), "time must be an integer"
         assert isinstance(passphrase, str), "passphrase must be a string"
-        handle: ots_handle_t = ots_polyseed_generate(network, time, passphrase)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        result: ots_result_t = ots_polyseed_generate(network, time, passphrase)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))
 
     @classmethod
     def decode(
@@ -446,10 +446,10 @@ class Polyseed(Seed):
         assert isinstance(network, Network), "network must be an instance of Network"
         assert isinstance(password, str), "password must be a string"
         assert isinstance(passphrase, str), "passphrase must be a string"
-        handle: ots_handle_t = ots_polyseed_decode(phrase, network, password, passphrase)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        result: ots_result_t = ots_polyseed_decode(phrase, network, password, passphrase)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))
 
     @classmethod
     def decodeIndices(
@@ -472,10 +472,10 @@ class Polyseed(Seed):
         assert isinstance(network, Network), "network must be an instance of Network"
         assert isinstance(password, str), "password must be a string"
         assert isinstance(passphrase, str), "passphrase must be a string"
-        handle: ots_handle_t = ots_polyseed_decode_indices(indices.handle, network, password, passphrase)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        result: ots_result_t = ots_polyseed_decode_indices(indices.handle, network, password, passphrase)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))
 
     @classmethod
     def decodeWithLanguage(
@@ -502,10 +502,10 @@ class Polyseed(Seed):
         assert isinstance(network, Network), "network must be an instance of Network"
         assert isinstance(password, str), "password must be a string"
         assert isinstance(passphrase, str), "passphrase must be a string"
-        handle: ots_handle_t = ots_polyseed_decode_with_language(phrase, language.handle, network, password, passphrase)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        result: ots_result_t = ots_polyseed_decode_with_language(phrase, language.result, network, password, passphrase)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))
 
     @classmethod
     def decodeWithLanguageCode(
@@ -531,7 +531,7 @@ class Polyseed(Seed):
         assert isinstance(network, Network), "network must be an instance of Network"
         assert isinstance(password, str), "password must be a string"
         assert isinstance(passphrase, str), "passphrase must be a string"
-        handle: ots_handle_t = ots_polyseed_decode_with_language_code(phrase, languageCode, network, password, passphrase)
-        if ots_is_error(handle):
-            raise OtsException.from_result(handle)
-        return cls(handle)
+        result: ots_result_t = ots_polyseed_decode_with_language_code(phrase, languageCode, network, password, passphrase)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return cls(ots_result_handle(result))

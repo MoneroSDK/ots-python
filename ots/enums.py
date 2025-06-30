@@ -1,14 +1,14 @@
 from enum import Enum
-from ._ots import ffi, lib
+from ._ots import lib as _lib
 
 
 class Network(Enum):
     """
     Enum representing the network type for OTS operations.
     """
-    MAIN = lib.OTS_NETWORK_MAIN
-    TEST = lib.OTS_NETWORK_TEST
-    STAGE = lib.OTS_NETWORK_STAGE
+    MAIN = _lib.OTS_NETWORK_MAIN
+    TEST = _lib.OTS_NETWORK_TEST
+    STAGE = _lib.OTS_NETWORK_STAGE
 
     def __int__(self):
         """
@@ -21,9 +21,9 @@ class AddressType(Enum):
     """
     Enum representing the address type for OTS operations.
     """
-    STANDARD = lib.OTS_ADDRESS_TYPE_STANDARD
-    SUBADDRESS = lib.OTS_ADDRESS_TYPE_SUBADDRESS
-    INTEGRATED = lib.OTS_ADDRESS_TYPE_INTEGRATED
+    STANDARD = _lib.OTS_ADDRESS_TYPE_STANDARD
+    SUBADDRESS = _lib.OTS_ADDRESS_TYPE_SUBADDRESS
+    INTEGRATED = _lib.OTS_ADDRESS_TYPE_INTEGRATED
 
     def __int__(self):
         """
@@ -36,8 +36,8 @@ class SeedType(Enum):
     """
     Enum representing the seed type for OTS operations.
     """
-    MONERO = lib.OTS_SEED_TYPE_MONERO
-    POLYSEED = lib.OTS_SEED_TYPE_POLYSEED
+    MONERO = _lib.OTS_SEED_TYPE_MONERO
+    POLYSEED = _lib.OTS_SEED_TYPE_POLYSEED
 
     def __int__(self):
         """
@@ -45,20 +45,21 @@ class SeedType(Enum):
         """
         return self.value
 
+
 class HandleType(Enum):
     """
     Enum representing the handle type for OTS operations.
     """
-    INVALID = lib.OTS_HANDLE_INVALID
-    WIPEABLE_STRING = lib.OTS_HANDLE_WIPEABLE_STRING
-    SEED_INDICES = lib.OTS_HANDLE_SEED_INDICES
-    SEED_LANGUAGE = lib.OTS_HANDLE_SEED_LANGUAGE
-    ADDRESS = lib.OTS_HANDLE_ADDRESS
-    SEED = lib.OTS_HANDLE_SEED
-    WALLET = lib.OTS_HANDLE_WALLET
-    TX = lib.OTS_HANDLE_TX
-    TX_DESCRIPTION = lib.OTS_HANDLE_TX_DESCRIPTION
-    TX_WARNING = lib.OTS_HANDLE_TX_WARNING
+    INVALID = _lib.OTS_HANDLE_INVALID
+    WIPEABLE_STRING = _lib.OTS_HANDLE_WIPEABLE_STRING
+    SEED_INDICES = _lib.OTS_HANDLE_SEED_INDICES
+    SEED_LANGUAGE = _lib.OTS_HANDLE_SEED_LANGUAGE
+    ADDRESS = _lib.OTS_HANDLE_ADDRESS
+    SEED = _lib.OTS_HANDLE_SEED
+    WALLET = _lib.OTS_HANDLE_WALLET
+    TX = _lib.OTS_HANDLE_TX
+    TX_DESCRIPTION = _lib.OTS_HANDLE_TX_DESCRIPTION
+    TX_WARNING = _lib.OTS_HANDLE_TX_WARNING
 
     def __int__(self):
         """
@@ -71,17 +72,17 @@ class ResultType(Enum):
     """
     Enum representing the type of result returned by OTS functions.
     """
-    NONE = lib.OTS_RESULT_NONE
-    HANDLE = lib.OTS_RESULT_HANDLE
-    STRING = lib.OTS_RESULT_STRING
-    BOOLEAN = lib.OTS_RESULT_BOOLEAN
-    NUMBER = lib.OTS_RESULT_NUMBER
-    COMPARISON = lib.OTS_RESULT_COMPARISON
-    ARRAY = lib.OTS_RESULT_ARRAY
-    ADDRESS_TYPE = lib.OTS_RESULT_ADDRESS_TYPE
-    NETWORK = lib.OTS_RESULT_NETWORK
-    SEED_TYPE = lib.OTS_RESULT_SEED_TYPE
-    ADDRESS_INDEX = lib.OTS_RESULT_ADDRESS_INDEX
+    NONE = _lib.OTS_RESULT_NONE
+    HANDLE = _lib.OTS_RESULT_HANDLE
+    STRING = _lib.OTS_RESULT_STRING
+    BOOLEAN = _lib.OTS_RESULT_BOOLEAN
+    NUMBER = _lib.OTS_RESULT_NUMBER
+    COMPARISON = _lib.OTS_RESULT_COMPARISON
+    ARRAY = _lib.OTS_RESULT_ARRAY
+    ADDRESS_TYPE = _lib.OTS_RESULT_ADDRESS_TYPE
+    NETWORK = _lib.OTS_RESULT_NETWORK
+    SEED_TYPE = _lib.OTS_RESULT_SEED_TYPE
+    ADDRESS_INDEX = _lib.OTS_RESULT_ADDRESS_INDEX
 
     def __int__(self):
         """
@@ -94,13 +95,13 @@ class DataType(Enum):
     """
     Enum representing the data type of the result.
     """
-    INVALID = lib.OTS_DATA_INVALID
-    INT = lib.OTS_DATA_INT
-    UINT8 = lib.OTS_DATA_UINT8
-    UINT16 = lib.OTS_DATA_UINT16
-    UINT32 = lib.OTS_DATA_UINT32
-    UINT64 = lib.OTS_DATA_UINT64
-    HANDLE = lib.OTS_DATA_HANDLE
+    INVALID = _lib.OTS_DATA_INVALID
+    INT = _lib.OTS_DATA_INT
+    UINT8 = _lib.OTS_DATA_UINT8
+    UINT16 = _lib.OTS_DATA_UINT16
+    UINT32 = _lib.OTS_DATA_UINT32
+    UINT64 = _lib.OTS_DATA_UINT64
+    HANDLE = _lib.OTS_DATA_HANDLE
 
     def __int__(self):
         """

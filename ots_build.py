@@ -1,108 +1,198 @@
-from sys import argv, exit
+from argparse import ArgumentParser
+from tempfile import TemporaryDirectory
 from cffi import FFI
-import cffi
-import os
-import re
+from pathlib import PurePath
+from os import path, makedirs
+from re import sub, DOTALL
 
-ffibuilder = FFI()
 
-# C definitions for CFFI
-# We extract this directly from the header, with minor adjustments for CFFI if needed.
-# Note: CFFI cannot parse `#include` directly in cdef.
-# Static inline functions like ots_handle_valid are not directly usable via cdef;
-# their logic would be reimplemented in Python or they'd need to be non-static.
-# For simplicity, we'll declare functions and let Python wrappers handle logic.
-def load_header(header_file):
-    """Loads the C header file content, filtering out unwanted content."""
-    try:
+LIBS = [
+    'monero-ots',
+    'epee',
+    'easylogging',
+    'monero-crypto',
+    'monero-stubs',
+    'utf8proc'
+]  # Names of the library to link against (e.g., -lmonero-ots...)
+CDEF_HEADER_FILES = [
+    'include/ots.h',
+    'include/ots-errors.h'
+]  # C header files to generate CFFI cdef from (e.g., ots.h, ots-errors.h)
+
+
+class FfiBuilderController:
+    """
+    Controller for FFI Builder to manage the building process.
+    """
+    def __init__(self, library_path=None, include_path=None, library=None, output_dir=None, cdef_header_file=None, temp=None, debug=False, args=None):
+        self.ffibuilder = FFI()
+        self.library_path = library_path or []
+        self.include_path = include_path or []
+        self.library = library or LIBS
+        self.output_dir = output_dir or path.join(path.dirname(__file__), "ots")
+        self.cdef_header_file = cdef_header_file or CDEF_HEADER_FILES
+        self.temp = temp or None
+        self.debug = debug
+        if args is not None:
+            self.parse_args(args)
+        self.ffibuilder.cdef(
+            self.generate_cdef_from_header()
+        )
+        self.ffibuilder.set_source(
+            "_ots",  # Name of the generated C module
+            self.generate_source(),  # C source code to compile
+            libraries=self.library,  # Libraries to link against
+            library_dirs=self.library_path,  # Directories to search for libraries
+            include_dirs=self.include_path,  # Directories to search for header files
+        )
+
+    def parse_args(self, args):
+        """
+        Parses command line arguments.
+        """
+        self.library_path = args.library_path or self.library_path
+        self.include_path = args.include_path or self.include_path
+        self.library = args.library or self.library
+        self.output_dir = args.output_dir or self.output_dir
+        self.cdef_header_file = args.cdef_header_file or self.cdef_header_file
+        self.temp = args.temp or self.temp
+        self.debug = args.debug if hasattr(args, 'debug') else self.debug
+
+    def compile(self):
+        """
+        Compiles the FFI module.
+        """
+        if self.temp is None:
+            td = TemporaryDirectory(prefix='ots_temp_')
+            self.temp = td.name
+        if not path.exists(self.output_dir):
+            makedirs(self.output_dir)
+        if self.debug:
+            print(f"""
+            Debug mode enabled
+            Library paths: {', '.join(self.library_path)}
+            Include paths: {', '.join(self.include_path)}
+            Libraries to link: {', '.join(self.library)}
+            Output directory: {self.output_dir}
+            C header files: {', '.join(self.cdef_header_file)}
+            Temporary directory: {self.temp}
+            """)
+            print("Compiling the FFI module...")
+        self.ffibuilder.compile(
+            verbose=self.debug,
+            target=path.join(self.output_dir, "_ots.so"),
+            tmpdir=self.temp
+        )
+
+    def cdef_from_header(self, header_file: str) -> str:
+        """Loads the C header file content to create cdef, filtering out unwanted content."""
         with open(header_file, 'r') as f:
             header_content = f.read()
             f.close()
             # Remove #include lines
-            header_content = re.sub(r'#include .*\n', '', header_content)
+            header_content = sub(r'#include .*\n', '', header_content)
             # Remove #ifdef __cplusplus blocks
-            header_content = re.sub(r'#ifdef __cplusplus\nextern "C" {\n', '', header_content)
-            header_content = re.sub(r'#ifdef __cplusplus\n}\n', '', header_content)
-            header_content = re.sub(r'#endif\s*//.*?\n', '', header_content) # Handle potential comments on #endif
+            header_content = sub(r'#ifdef __cplusplus\nextern "C" {\n', '', header_content)
+            header_content = sub(r'#ifdef __cplusplus\n}\n', '', header_content)
+            header_content = sub(r'#endif\s*//.*?\n', '', header_content) # Handle potential comments on #endif
             # Remove multi-line comment blocks /* ... */
-            header_content = re.sub(r'\s*/\*.*?\*/', '', header_content, flags=re.DOTALL)
+            header_content = sub(r'\s*/\*.*?\*/', '', header_content, flags=DOTALL)
             # Remove single-line comments // ...
-            header_content = re.sub(r'//.*?\n', '', header_content)
+            header_content = sub(r'//.*?\n', '', header_content)
             # Remove #ifndef <XXX> blocks
-            header_content = re.sub(r'#ifndef .*?\n#define .*?\n', '', header_content)
-            header_content = re.sub(r'#ifndef .*?\n', '', header_content)
+            header_content = sub(r'#ifndef .*?\n#define .*?\n', '', header_content)
+            header_content = sub(r'#ifndef .*?\n', '', header_content)
             # Remove #define <XXX>
-            # header_content = re.sub(r'#define .*?\n', '', header_content)
+            # header_content = sub(r'#define .*?\n', '', header_content)
             # Remove #endif lines (including potential comments after #endif)
-            header_content = re.sub(r'#endif\s*//.*?\n', '', header_content)
-            header_content = re.sub(r'#endif.*', '', header_content)
+            header_content = sub(r'#endif\s*//.*?\n', '', header_content)
+            header_content = sub(r'#endif.*', '', header_content)
             # Remove empty lines
-            header_content = re.sub(r'\n\s*\n', '\n', header_content)
-            header_content = re.sub(
+            header_content = sub(r'\n\s*\n', '\n', header_content)
+            header_content = sub(
                 r'^(.*)inline(\s.*\(.*\))\s?{.*}',
                 r'\1\2;',
                 header_content,
-                flags=re.DOTALL
+                flags=DOTALL
             )  # Remove inline function bodies
             return header_content
-    except FileNotFoundError:
-        print(f"Error: Header file '{header_file}' not found.")
-        exit(1)
+        raise OSError(f"Could not read header file: {header_file}")
 
-CDEF_SOURCE = load_header("include/ots.h") + load_header("include/ots-errors.h")
-with open("ots_cdef.h", "w") as f:
-    f.write(CDEF_SOURCE)
-    f.close()
+    def generate_cdef_from_header(self) -> str:
+        """
+        Generates C definitions from a list of header files.
+        """
+        cdef_content = ''
+        for header in self.cdef_header_file:
+            cdef_content += self.cdef_from_header(header) + '\n'
+        if self.debug:
+            with open('ots_cdef.h', 'w') as f:
+                f.write(cdef_content)
+                f.close()
+        return cdef_content
 
-ffibuilder.cdef(CDEF_SOURCE)
+    def generate_source(self) -> str:
+        source_content = ""
+        for inlude in self.cdef_header_file:
+            include_path = PurePath(inlude).name
+            source_content += f'#include <{include_path}>\n'
+        if self.debug:
+            with open('source.c', 'w') as f:
+                f.write(source_content)
+                f.close()
+        return source_content
 
-# Source for CFFI to compile.
-# This includes the header and specifies the library to link against.
-# It can also include helper C functions if needed for GC or complex argument conversions.
-# For functions taking `X**` that need to be GC'd with `X*`, helpers are useful.
-# Example: static void _gc_helper_free_string(char *s) { if (s) ots_free_string(&s); }
-# This is not strictly necessary for all `X**` free functions if the Python side manages
-# the `X*` and constructs `X*[]` or `&X*` for the call.
-# For `ots_free_handle_object`, it takes `ots_handle_t*`, which is simpler for GC.
 
-SOURCE = """
-#include "ots.h"
-#include "ots-errors.h"
-"""
+if __name__ == 'ots_build':  # setup.py
+    ffibuilder = FfiBuilderController()
 
-ffibuilder.set_source(
-    "_ots",  # Name of the generated C module
-    SOURCE,
-    libraries=[
-        'monero-ots',
-        'epee',
-        'easylogging',
-        'monero-crypto',
-        'monero-stubs',
-        'utf8proc'
-    ],  # Name of the library to link against (e.g., -lots)
-    library_dirs = [ # Add if libots.so/dll or other libs are not in standard linker paths
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), 'lib'),
-        argv[1]
-    ],
-    include_dirs = [ # Add if ots.h or other header files are not in standard include paths
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), 'include'),
-        argv[2]
-    ],
-)
-if __name__ == "__main__":
-    if len(argv) < 3:
-        exit(1)
-    print("Building OTS CFFI module...")
-    output_dir = os.path.join(os.path.dirname(__file__), "ots")
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    # CFFI will generate files in the current directory by default.
-    # To put them in a subdirectory, you can temporarily change directory
-    # or handle paths carefully if CFFI allows specifying output path for generated C file.
-    # For simplicity, this example assumes CFFI generates files in the script's dir.
-    # Or, you can tell CFFI to put the .o and .so files in a specific location
-    # using ffibuilder.compile(target="path/to/module.so", tmpdir="build_temp")
-
-    ffibuilder.compile(verbose=True, target=os.path.join(output_dir, "_ots.so"), tmpdir=output_dir)
+if __name__ == '__main__':
+    parser = ArgumentParser(description='Build the OTS CFFI module.')
+    parser.add_argument(
+        '--library-path',
+        '-p',
+        nargs='+',
+        default=None,
+        help='Path to the directory containing the OTS library (e.g., libots.so or libots.dll).'
+    )
+    parser.add_argument(
+        '--include-path',
+        '-i',
+        nargs='+',
+        default=None,
+        help='Path to the directory containing the OTS header files (e.g., ots.h).'
+    )
+    parser.add_argument(
+        '--library',
+        '-l',
+        nargs='+',
+        default=None,
+        help='Name of the OTS library to link against (e.g., ots, epee, easylogging, monero-crypto, monero-stubs, utf8proc).'
+    )
+    parser.add_argument(
+        '--output-dir',
+        '-d',
+        default=None,
+        help='Directory to output the compiled module (default: ots/).'
+    )
+    parser.add_argument(
+        '--cdef-header-file',
+        '-c',
+        nargs='*',
+        default=None,
+        help='C header files to generate CFFI cdef from (default: include/ots.h, include/ots-errors.h).'
+    )
+    parser.add_argument(
+        '--temp',
+        '-t',
+        default=None,
+        help='Temporary directory for building the OTS CFFI module (default: a temporary directory).'
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        default=False,
+        help='Enable debug mode for verbose output.'
+    )
+    ffibuilder = FfiBuilderController(args=parser.parse_args())
+    ffibuilder.compile()

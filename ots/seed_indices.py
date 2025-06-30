@@ -1,4 +1,5 @@
 from .raw import *
+from .enums import HandleType
 from .exceptions import OtsException
 
 
@@ -10,7 +11,7 @@ class SeedIndices:
 
     def __init__(self, handle: ots_handle_t):
         assert isinstance(handle, ots_handle_t), "handle must be of type ots_handle_t"
-        assert handle.type == ots_handle_type_t.OTS_HANDLE_TYPE_SEED_INDICES, "handle must be of type OTS_HANDLE_TYPE_SEED_INDICES"
+        assert handle.type == HandleType.SEED_INDICES, "handle must be of type SEED_INDICES"
         self.handle: ots_handle_t = handle
 
     def __len__(self) -> int:
@@ -40,10 +41,7 @@ class SeedIndices:
         """
         Get the list of seed indices.
         """
-        result: ots_result_t = ots_seed_indices_values(self.handle)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
-        return ots_result_uint16_array(result)
+        return ots_seed_indices_values(self.handle)
 
     @property
     def count(self) -> int:

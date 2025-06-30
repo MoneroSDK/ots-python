@@ -791,7 +791,7 @@ def ots_result_array_get_char(
     assert ots_result_is_array(result), "result must be an array"
     assert ots_result_size(result) > index >= 0, "index out of bounds"
     assert ots_result_data_is_char(result), "result array must be of char type"
-    return ffi.string(lib.ots_result_array_get_char(_unwrap(result), index))
+    return ffi.unpack(lib.ots_result_array_get_char(_unwrap(result), index))
 
 
 def ots_result_array_get_uint8(
@@ -914,7 +914,7 @@ def ots_result_char_array_reference(result: _CDataBase|None) -> bytes:
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     assert ots_result_is_array(result), "result must be an array"
     assert ots_result_data_is_char(result) or ots_result_data_is_uint8(result), "result array must be of char or uint8 type"
-    return ffi.string(lib.ots_result_uint8_array_reference(_unwrap(result)), ots_result_size(result))
+    return ffi.unpack(ffi.cast('char*', lib.ots_result_uint8_array_reference(_unwrap(result))), ots_result_size(result))
 
 
 def ots_result_uint8_array_reference(
@@ -929,8 +929,15 @@ def ots_result_uint8_array_reference(
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     assert ots_result_is_array(result), "result must be an array"
     assert ots_result_data_is_uint8(result), "result array must be of uint8 type"
-    handle = lib.ots_result_uint8_array_reference(_unwrap(result))
-    return [int(ffi.cast('uint8_t', handle[i])) for i in range(ots_result_size(result))]
+    return [
+        int(i) for i in ffi.from_buffer(
+            'uint8_t[]',
+            ffi.buffer(
+                lib.ots_result_uint8_array_reference(_unwrap(result)),
+                ots_result_size(result)
+            )
+        )
+    ]
 
 
 def ots_result_uint16_array_reference(result: ots_result_t | _CDataBase) -> list[int]:
@@ -943,8 +950,15 @@ def ots_result_uint16_array_reference(result: ots_result_t | _CDataBase) -> list
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     assert ots_result_is_array(result), "result must be an array"
     assert ots_result_data_is_uint16(result), "result array must be of uint16 type"
-    handle = lib.ots_result_uint16_array_reference(_unwrap(result))
-    return [int(ffi.cast('uint16_t', handle[i])) for i in range(ots_result_size(result))]
+    return [
+        int(i) for i in ffi.from_buffer(
+            'uint16_t[]',
+            ffi.buffer(
+                lib.ots_result_uint16_array_reference(_unwrap(result)),
+                ots_result_size(result) * ffi.sizeof('uint16_t')
+            )
+        )
+    ]
 
 
 def ots_result_uint32_array_reference(result: ots_result_t | _CDataBase) -> list[int]:
@@ -957,8 +971,15 @@ def ots_result_uint32_array_reference(result: ots_result_t | _CDataBase) -> list
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     assert ots_result_is_array(result), "result must be an array"
     assert ots_result_data_is_uint32(result), "result array must be of uint32 type"
-    handle = lib.ots_result_uint32_array_reference(_unwrap(result))
-    return [int(ffi.cast('uint32_t', handle[i])) for i in range(ots_result_size(result))]
+    return [
+        int(i) for i in ffi.from_buffer(
+            'uint32_t[]',
+            ffi.buffer(
+                lib.ots_result_uint32_array_reference(_unwrap(result)),
+                ots_result_size(result) * ffi.sizeof('uint32_t')
+            )
+        )
+    ]
 
 
 def ots_result_uint64_array_reference(result: ots_result_t | _CDataBase) -> list[int]:
@@ -971,8 +992,15 @@ def ots_result_uint64_array_reference(result: ots_result_t | _CDataBase) -> list
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     assert ots_result_is_array(result), "result must be an array"
     assert ots_result_data_is_uint64(result), "result array must be of uint64 type"
-    handle = lib.ots_result_uint64_array_reference(_unwrap(result))
-    return [int(ffi.cast('uint64_t', handle[i])) for i in range(ots_result_size(result))]
+    return [
+        int(i) for i in ffi.from_buffer(
+            'uint64_t[]',
+            ffi.buffer(
+                lib.ots_result_uint64_array_reference(_unwrap(result)),
+                ots_result_size(result) * ffi.sizeof('uint64_t')
+            )
+        )
+    ]
 
 
 def ots_result_handle_array(result: ots_result_t | _CDataBase) -> list[_CDataBase]:
@@ -1014,7 +1042,7 @@ def ots_result_char_array(result: ots_result_t | _CDataBase) -> bytes:
     assert ots_result_is_array(result), "result must be an array"
     assert ots_result_data_is_char(result) or ots_result_data_is_uint8(result), "result array must be of char or uint8 type"
     handle = lib.ots_result_char_array(_unwrap(result))
-    return ffi.string(handle, ots_result_size(result))
+    return ffi.unpack(handle, ots_result_size(result))
 
 
 def ots_result_uint8_array(result: ots_result_t | _CDataBase) -> list[int]:
@@ -1027,8 +1055,15 @@ def ots_result_uint8_array(result: ots_result_t | _CDataBase) -> list[int]:
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     assert ots_result_is_array(result), "result must be an array"
     assert ots_result_data_is_uint8(result), "result array must be of uint8 type"
-    handle = lib.ots_result_uint8_array(_unwrap(result))
-    return [int(ffi.cast('uint8_t', handle[i])) for i in range(ots_result_size(result))]
+    return [
+        int(i) for i in ffi.from_buffer(
+            'uint8_t[]',
+            ffi.buffer(
+                lib.ots_result_uint8_array_reference(_unwrap(result)),
+                ots_result_size(result)
+            )
+        )
+    ]
 
 
 def ots_result_uint16_array(result: ots_result_t | _CDataBase) -> list[int]:
@@ -1041,8 +1076,15 @@ def ots_result_uint16_array(result: ots_result_t | _CDataBase) -> list[int]:
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     assert ots_result_is_array(result), "result must be an array"
     assert ots_result_data_is_uint16(result), "result array must be of uint16 type"
-    handle = lib.ots_result_uint16_array(_unwrap(result))
-    return [int(ffi.cast('uint16_t', handle[i])) for i in range(ots_result_size(result))]
+    return [
+        int(i) for i in ffi.from_buffer(
+            'uint16_t[]',
+            ffi.buffer(
+                lib.ots_result_uint16_array_reference(_unwrap(result)),
+                ots_result_size(result) * ffi.sizeof('uint16_t')
+            )
+        )
+    ]
 
 
 def ots_result_uint32_array(result: ots_result_t | _CDataBase) -> list[int]:
@@ -1055,8 +1097,15 @@ def ots_result_uint32_array(result: ots_result_t | _CDataBase) -> list[int]:
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     assert ots_result_is_array(result), "result must be an array"
     assert ots_result_data_is_uint32(result), "result array must be of uint32 type"
-    handle = lib.ots_result_uint32_array(_unwrap(result))
-    return [int(ffi.cast('uint32_t', handle[i])) for i in range(ots_result_size(result))]
+    return [
+        int(i) for i in ffi.from_buffer(
+            'uint32_t[]',
+            ffi.buffer(
+                lib.ots_result_uint32_array_reference(_unwrap(result)),
+                ots_result_size(result) * ffi.sizeof('uint32_t')
+            )
+        )
+    ]
 
 
 def ots_result_uint64_array(result: ots_result_t | _CDataBase) -> list[int]:
@@ -1069,8 +1118,15 @@ def ots_result_uint64_array(result: ots_result_t | _CDataBase) -> list[int]:
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     assert ots_result_is_array(result), "result must be an array"
     assert ots_result_data_is_uint64(result), "result array must be of uint64 type"
-    handle = lib.ots_result_uint64_array(_unwrap(result))
-    return [int(ffi.cast('uint64_t', handle[i])) for i in range(ots_result_size(result))]
+    return [
+        int(i) for i in ffi.from_buffer(
+            'uint64_t[]',
+            ffi.buffer(
+                lib.ots_result_uint64_array_reference(_unwrap(result)),
+                ots_result_size(result) * ffi.sizeof('uint64_t')
+            )
+        )
+    ]
 
 
 def ots_result_is_array(result: ots_result_t | _CDataBase) -> bool:
@@ -1312,7 +1368,7 @@ def ots_free_result(result: ots_result_t | _CDataBase) -> None:
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     if isinstance(result, _CDataBase):
         assert ffi.typeof(result) == ffi.typeof('ots_result_t**'), "result must be a ots_result_t**"
-        lib.ots_free_result(ffi.cast('ots_result_t**', _wrap(result)))
+        lib.ots_free_result(ffi.cast('ots_result_t**', _unwrap(result)))
         return
     del result
 
@@ -1388,8 +1444,8 @@ def ots_wipeable_string_compare(
     :param str2: The second string to compare.
     :return: ots_result_t indicating the comparison result.
     """
-    assert isinstance(str1, (ots_handle_t, _CDataBase)) and HandleType(_wrap(str1).type) == HandleType.WIPEABLE_STRING, "str1 must be an instance of ots_handle_t or _CDataBase and of type HandleType.WIPEABLE_STRING"
-    assert isinstance(str2, (ots_handle_t, _CDataBase)) and HandleType(_wrap(str2).type) == HandleType.WIPEABLE_STRING, "str2 must be an instance of ots_handle_t or _CDataBase and of type HandleType.WIPEABLE_STRING"
+    assert isinstance(str1, (ots_handle_t, _CDataBase)) and HandleType(_unwrap(str1).type) == HandleType.WIPEABLE_STRING, "str1 must be an instance of ots_handle_t or _CDataBase and of type HandleType.WIPEABLE_STRING"
+    assert isinstance(str2, (ots_handle_t, _CDataBase)) and HandleType(_unwrap(str2).type) == HandleType.WIPEABLE_STRING, "str2 must be an instance of ots_handle_t or _CDataBase and of type HandleType.WIPEABLE_STRING"
     return ots_result_t(lib.ots_wipeable_string_compare(_unwrap(str1), _unwrap(str2)))
 
 
@@ -1401,7 +1457,7 @@ def ots_wipeable_string_c_str(string: ots_handle_t | _CDataBase) -> str:
     :return: The C-style string representation.
     """
     assert isinstance(string, (ots_handle_t, _CDataBase)), "string must be an instance of ots_handle_t or _CDataBase"
-    assert HandleType(_wrap(string).type) == HandleType.WIPEABLE_STRING, "string must be of type HandleType.WIPEABLE_STRING"
+    assert HandleType(_unwrap(string).type) == HandleType.WIPEABLE_STRING, "string must be of type HandleType.WIPEABLE_STRING"
     return ffi.string(lib.ots_wipeable_string_c_str(_unwrap(string))).decode('utf-8')
 
 
@@ -1468,9 +1524,15 @@ def ots_seed_indices_values(handle: ots_handle_t | _CDataBase) -> list[int]:
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(handle).type) == HandleType.SEED_INDICES, "handle must be of type HandleType.SEED_INDICES"
-    values = lib.ots_seed_indices_values(_unwrap(handle))
-    count = lib.ots_seed_indices_count(_unwrap(handle))
-    return [int(values[i]) for i in range(count)]
+    return [
+        int(i) for i in ffi.from_buffer(
+            'uint16_t[]',
+            ffi.buffer(
+                lib.ots_seed_indices_values(_unwrap(handle)),
+                ots_seed_indices_count(handle) * ffi.sizeof('uint16_t')
+            )
+        )
+    ]
 
 
 def ots_seed_indices_count(handle: ots_handle_t | _CDataBase) -> int:
@@ -2757,19 +2819,21 @@ def ots_wallet_public_spend_key(wallet: ots_handle_t | _CDataBase) -> ots_result
 
 def ots_wallet_import_outputs(
     wallet: ots_handle_t | _CDataBase,
-    outputs: str
+    outputs: bytes | str
 ) -> ots_result_t:
     """
     Imports outputs into the given wallet handle.
 
     :param wallet: The handle of the wallet.
-    :param outputs: A string containing the outputs to import.
+    :param outputs: A bytes or string containing the outputs to import.
     :return: ots_result_t indicating the result of the import operation.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(wallet).type) == HandleType.WALLET, "wallet must be of type HandleType.WALLET"
-    assert isinstance(outputs, str), "outputs must be a string"
-    return ots_result_t(lib.ots_wallet_import_outputs(_unwrap(wallet), outputs.encode('utf-8')))
+    assert isinstance(outputs, (bytes, str)), "outputs must be bytes or a string"
+    if isinstance(outputs, str):
+        outputs = outputs.encode('utf-8')
+    return ots_result_t(lib.ots_wallet_import_outputs(_unwrap(wallet), outputs, len(outputs)))
 
 
 def ots_wallet_export_key_images(wallet: ots_handle_t | _CDataBase) -> ots_result_t:
@@ -3069,7 +3133,7 @@ def ots_tx_description(
 
 def ots_tx_description_tx_set(
     tx_description: ots_handle_t | _CDataBase
-) -> str:
+) -> bytes:
     """
     Returns the transaction set for the given transaction description handle.
 
@@ -3078,7 +3142,10 @@ def ots_tx_description_tx_set(
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(tx_description).type) == HandleType.TX_DESCRIPTION, "tx_description must be of type HandleType.TX_DESCRIPTION"
-    return lib.ots_tx_description_tx_set(_unwrap(tx_description)).decode('utf-8')
+    return ffi.unpack(
+        lib.ots_tx_description_tx_set(_unwrap(tx_description)),
+        ots_tx_description_tx_set_size(_unwrap(tx_description))
+    )
 
 
 def ots_tx_description_tx_set_size(
@@ -3169,6 +3236,50 @@ def ots_tx_description_flow_amount(
     assert HandleType(_unwrap(tx_description).type) == HandleType.TX_DESCRIPTION, "tx_description must be of type HandleType.TX_DESCRIPTION"
     assert isinstance(index, int), "index must be an integer"
     return lib.ots_tx_description_flow_amount(_unwrap(tx_description), index)
+
+
+def ots_tx_description_has_change(
+    tx_description: ots_handle_t | _CDataBase
+) -> bool:
+    """
+    Checks if the given transaction description handle has change.
+
+    :param tx_description: The handle of the transaction description.
+    :return: True if there is change, False otherwise.
+    """
+    assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
+    assert HandleType(_unwrap(tx_description).type) == HandleType.TX_DESCRIPTION, "tx_description must be of type HandleType.TX_DESCRIPTION"
+    return lib.ots_tx_description_has_change(_unwrap(tx_description))
+
+def ots_tx_description_change_address(
+    tx_description: ots_handle_t | _CDataBase
+) -> str | None:
+    """
+    Returns the change address for the given transaction description handle.
+
+    :param tx_description: The handle of the transaction description.
+    :return: A string representing the change address, or None if there is no change address.
+    """
+    assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
+    assert HandleType(_unwrap(tx_description).type) == HandleType.TX_DESCRIPTION, "tx_description must be of type HandleType.TX_DESCRIPTION"
+    address = lib.ots_tx_description_change_address(_unwrap(tx_description))
+    if address == ffi.NULL:
+        return None
+    return ffi.string(address).decode('utf-8')
+
+
+def ots_tx_description_change_amount(
+    tx_description: ots_handle_t | _CDataBase
+) -> int:
+    """
+    Returns the change amount for the given transaction description handle.
+
+    :param tx_description: The handle of the transaction description.
+    :return: An integer representing the change amount.
+    """
+    assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
+    assert HandleType(_unwrap(tx_description).type) == HandleType.TX_DESCRIPTION, "tx_description must be of type HandleType.TX_DESCRIPTION"
+    return lib.ots_tx_description_change_amount(_unwrap(tx_description))
 
 
 def ots_tx_description_fee(
@@ -3395,7 +3506,7 @@ def ots_tx_description_transfer_fee(
 def ots_tx_description_transfer_payment_id(
     tx_description: ots_handle_t | _CDataBase,
     index: int
-) -> int:
+) -> str | None:
     """
     Returns the payment ID for a specific transfer in the given transaction description handle.
 
@@ -3406,7 +3517,10 @@ def ots_tx_description_transfer_payment_id(
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(tx_description).type) == HandleType.TX_DESCRIPTION, "tx_description must be of type HandleType.TX_DESCRIPTION"
     assert isinstance(index, int), "index must be an integer"
-    return lib.ots_tx_description_transfer_payment_id(_unwrap(tx_description), index)
+    payment_id: _CDataBase = lib.ots_tx_description_transfer_payment_id(_unwrap(tx_description), index)
+    if payment_id == ffi.NULL:
+        return None
+    return ffi.string(payment_id).decode('utf-8')
 
 
 def ots_tx_description_transfer_dummy_outputs(
@@ -3429,7 +3543,7 @@ def ots_tx_description_transfer_dummy_outputs(
 def ots_tx_description_transfer_extra(
     tx_description: ots_handle_t | _CDataBase,
     index: int
-) -> str:
+) -> bytes:
     """
     Returns the extra data for a specific transfer in the given transaction description handle.
 
@@ -3440,7 +3554,10 @@ def ots_tx_description_transfer_extra(
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(tx_description).type) == HandleType.TX_DESCRIPTION, "tx_description must be of type HandleType.TX_DESCRIPTION"
     assert isinstance(index, int), "index must be an integer"
-    return lib.ots_tx_description_transfer_extra(_unwrap(tx_description), index).decode('utf-8')
+    return ffi.unpack(
+        lib.ots_tx_description_transfer_extra(_unwrap(tx_description), index),
+        lib.ots_tx_description_transfer_extra_size(_unwrap(tx_description), index)
+    )
 
 
 def ots_tx_description_transfer_extra_size(

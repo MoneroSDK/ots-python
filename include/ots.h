@@ -2207,6 +2207,34 @@ extern "C" {
     );
 
     /**
+     * @brief Check if the transaction has change
+     * @param[in] tx_description Transaction description handle
+     * @return True if the transaction has change, false otherwise
+     */
+    bool ots_tx_description_has_change(
+        const ots_handle_t* tx_description
+    );
+
+    /**
+     * @brief Get the change address of the transaction
+     * @return Change address of the transaction
+     */
+    const char* ots_tx_description_change_address(
+        const ots_handle_t* tx_description
+    );
+
+    /**
+     * @brief Get the change amount of the transaction
+     * @param[in] tx_description Transaction description handle
+     * @return Change amount of the transaction
+     */
+    uint64_t ots_tx_description_change_amount(
+        const ots_handle_t* tx_description
+    );
+
+
+
+    /**
      * @brief Get the total fee of the transaction
      * @param[in] tx_description Transaction description handle
      * @return Total fee of the transaction

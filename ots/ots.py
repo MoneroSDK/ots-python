@@ -29,7 +29,7 @@ class Ots:
         result: ots_result_t = ots_version_components()
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return tuple(ots_result_int_array(result))
+        return tuple(int(i) for i in ots_result_int_array(result))
 
     @staticmethod
     def heightFromTimestamp(timestamp: int, network: Network | int = Network.MAIN) -> int:
