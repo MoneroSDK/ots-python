@@ -30,6 +30,6 @@ setup(
     setup_requires=[
         'cffi>=1.17.1',
     ],
-    cffi_modules=['ots_build.py:ffibuilder'],
+    cffi_modules=['ots_build:ffibuilder'],
     license=license
 )
