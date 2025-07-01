@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 
+
 with open('README.md', 'r') as f:
     long_description = f.read()
     f.close()
@@ -13,7 +14,7 @@ setup(
     version='0.0.1',
     author='DiosDelRayo',
     author_email='no@spam',
-    description='A Python module for OTS (Offline Transaction Signing) https://github.com/monero-project/monero.git',
+    description='A Python module for Monero OTS (Offline Transaction Signing) https://github.com/monero-project/monero.git',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/MoneroSDK/ots-python',
@@ -30,6 +31,6 @@ setup(
     setup_requires=[
         'cffi>=1.17.1',
     ],
-    cffi_modules=['ots_build:ffibuilder'],
+    cffi_modules=['ots_build.py:ffibuilder'],
     license=license
 )

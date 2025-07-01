@@ -4,6 +4,7 @@ from cffi import FFI
 from pathlib import PurePath
 from os import path, makedirs
 from re import sub, DOTALL
+from sys import exit
 
 
 LIBS = [
@@ -20,12 +21,20 @@ CDEF_HEADER_FILES = [
 ]  # C header files to generate CFFI cdef from (e.g., ots.h, ots-errors.h)
 
 
-class FfiBuilderController:
+class FfiBuilderController(FFI):
     """
     Controller for FFI Builder to manage the building process.
     """
-    def __init__(self, library_path=None, include_path=None, library=None, output_dir=None, cdef_header_file=None, temp=None, debug=False, args=None):
-        self.ffibuilder = FFI()
+    def __init__(self,
+        library_path=None,
+        include_path=None,
+        library=None,
+        output_dir=None,
+        cdef_header_file=None,
+        temp=None,
+        debug=False,
+        args=None
+    ):
         self.library_path = library_path or []
         self.include_path = include_path or []
         self.library = library or LIBS
@@ -35,11 +44,12 @@ class FfiBuilderController:
         self.debug = debug
         if args is not None:
             self.parse_args(args)
-        self.ffibuilder.cdef(
+        super().__init__()
+        self.cdef(
             self.generate_cdef_from_header()
         )
-        self.ffibuilder.set_source(
-            "_ots",  # Name of the generated C module
+        self.set_source(
+            "ots._ots",  # Name of the generated C module
             self.generate_source(),  # C source code to compile
             libraries=self.library,  # Libraries to link against
             library_dirs=self.library_path,  # Directories to search for libraries
@@ -78,7 +88,7 @@ class FfiBuilderController:
             Temporary directory: {self.temp}
             """)
             print("Compiling the FFI module...")
-        self.ffibuilder.compile(
+        super().compile(
             verbose=self.debug,
             target=path.join(self.output_dir, "_ots.so"),
             tmpdir=self.temp
@@ -103,8 +113,6 @@ class FfiBuilderController:
             header_content = sub(r'#ifndef .*?\n#define .*?\n', '', header_content)
             header_content = sub(r'#ifndef .*?\n', '', header_content)
             # Remove #define <XXX>
-            # header_content = sub(r'#define .*?\n', '', header_content)
-            # Remove #endif lines (including potential comments after #endif)
             header_content = sub(r'#endif\s*//.*?\n', '', header_content)
             header_content = sub(r'#endif.*', '', header_content)
             # Remove empty lines
@@ -141,10 +149,6 @@ class FfiBuilderController:
                 f.write(source_content)
                 f.close()
         return source_content
-
-
-if __name__ == 'ots_build':  # setup.py
-    ffibuilder = FfiBuilderController()
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Build the OTS CFFI module.')
@@ -196,3 +200,7 @@ if __name__ == '__main__':
     )
     ffibuilder = FfiBuilderController(args=parser.parse_args())
     ffibuilder.compile()
+    exit(0)
+
+
+ffibuilder = FfiBuilderController()
