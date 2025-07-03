@@ -7,33 +7,64 @@ REQUIRE__OTS_HANDLE_T__OR__CDATA_BASE = "handle must be a valid ots_handle_t or 
 
 
 class _opaque_handle_t:
+    """
+    Base class for opaque handles for results and handles in OTS.
+
+    .. attention::
+
+        Do not instantiate this class directly!
+
+    """
 
     @property
     def ptr(self) -> _CDataBase:
         """
         Returns the pointer to the underlying C data type.
+        Used for almost all operations.
+
+        :return: The pointer to the C data type.
         """
         return self.ptrptr[0]
 
     @property
     def cType(self) -> str:
         """
-        Returns the type of the handle as a string.
+        Returns the type of the ptr as a string.
+        Can be used to distinguish between different types of handles.
+
+        :return: The type of the ptr as a string.
         """
         return ffi.typeof(self.ptrptr[0]).cname
+
 
 class ots_result_t(_opaque_handle_t):
     """
     Represents the result of an OTS operation.
+    Internally it wraps the C ABI ots_result_t struct in a pointer of a pointer type,
+    so it can be reasonably freed when the object is deleted.
     """
 
     def __init__(self, result: _CDataBase):
-        self.ptrptr = ffi.new('ots_result_t **')
+        """
+        Initializes the ots_result_t with a C data type.
+        It must be of type ots_result_t *.
+        """
+        assert ffi.typeof(result) == ffi.typeof('ots_result_t *'), "result must be of type ots_result_t *"
+        self.ptrptr: _CDataBase = ffi.new('ots_result_t **')
+        """
+        The pointer to the pointer to be able to free the result.
+
+        .. hint::
+
+            No need to do anything to free the result, then delete the object,
+            or let it go out of scope and gc will take care of it.
+
+        """
         self.ptrptr[0] = result
 
     def __del__(self):
         """
-        Frees the underlying C data type when the object is deleted.
+        Frees the underlying C data type before the object is deleted.
         """
         if self.ptrptr:
             lib.ots_free_result(self.ptrptr)
@@ -43,12 +74,33 @@ class ots_result_t(_opaque_handle_t):
 class ots_handle_t(_opaque_handle_t):
     """
     Represents a handle to an OTS object.
+    Internally it wraps the C ABI ots_handle_t struct in a pointer of a pointer type,
+    so it can be reasonably freed when the object is deleted.
     """
 
     def __init__(self, handle: _CDataBase, reference: bool = False):
-        self.ptrptr = ffi.new('ots_handle_t **')
+        """
+        Initializes the ots_handle_t with a C data type.
+        It must be of type ots_handle_t *.
+        """
+        assert ffi.typeof(handle) == ffi.typeof('ots_handle_t *'), "handle must be of type ots_handle_t *"
+        self.ptrptr: _CDataBase = ffi.new('ots_handle_t **')
+        """
+        The pointer to the pointer to be able to free the handle.
+
+        .. hint::
+
+            No need to do anything to free the handle, then delete the object,
+            or let it go out of scope and gc will take care of it.
+
+        """
         self.ptrptr[0] = handle
-        self.reference = reference
+        self.reference: bool = reference
+        """
+        Indicates if the handle is a reference. A reference must not free the underlying
+        C data type when the object is deleted. But no worry, it is taken care of it
+        automatically by the wrapper and the library.
+        """
 
     def __del__(self):
         """
@@ -94,14 +146,25 @@ def _unwrap(
     Unwraps the given value to its C data type.
 
     :param value: The value to unwrap.
+    :type value: _CDataBase | ots_result_t | ots_handle_t
     :return: The C data type representation of the value.
     """
+    assert isinstance(value, (_CDataBase, ots_result_t, ots_handle_t)), "value must be an instance of _CDataBase, ots_result_t or ots_handle_t"
+    assert instance(value, (ots_result_t, ots_handle_t)) or ffi.typeof(value) in (ffi.typeof('ots_result_t *'), ffi.typeof('ots_handle_t *')), "value must be of type ots_result_t * or ots_handle_t *"
     if isinstance(value, _opaque_handle_t):
         return value.ptr
     return value
 
 
 def _is_handle(handle: ots_handle_t | _CDataBase | None) -> bool:
+    """
+    Checks if the given handle is a valid ots_handle_t or `ots_handle_t *` _CDataBase object. Accepts None to not raise an error and return simply silently False.
+
+    :param handle: The handle to check.
+    :type handle: ots_handle_t | _CDataBase | None
+    :return: True if the handle is valid, False otherwise.
+    """
+    assert isinstance(handle, (ots_handle_t, _CDataBase, type(None))), "handle must be an instance of ots_handle_t or _CDataBase or None"
     if (
         isinstance(handle, ots_handle_t)
         and handle.cType == 'ots_handle_t *'
@@ -114,6 +177,13 @@ def _is_handle(handle: ots_handle_t | _CDataBase | None) -> bool:
 
 
 def _is_result(result: ots_result_t | _CDataBase | None) -> bool:
+    """
+    Checks if the given result is a valid ots_result_t or `ots_result_t *` _CDataBase object. Accepts None to not raise an error and return simply silently False.
+
+    :param result: The result to check.
+    :type result: ots_result_t | _CDataBase | None
+    :return: True if the result is valid, False otherwise.
+    """
     if isinstance(result, ots_result_t):
         return result.cType == 'ots_result_t *' and result.ptr != ffi.NULL
     if isinstance(result, _CDataBase):
@@ -124,8 +194,10 @@ def _is_result(result: ots_result_t | _CDataBase | None) -> bool:
 def _raise_on_error(result: ots_result_t | _CDataBase) -> None:
     """
     Raises an exception if the result indicates an error.
+    Uses Internally :py:func:`ots_is_error` to check for errors.
 
     :param result: The result to check for errors.
+    :type result: ots_result_t | _CDataBase
     :raises Exception: If the result is an error.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -144,7 +216,9 @@ def ots_handle_valid(
     Checks if the given handle is valid.
 
     :param handle: The handle to check.
+    :type handle: ots_handle_t | _CDataBase
     :param handle_type: The expected type of the handle.
+    :type handle_type: HandleType | int
     :return: True if the handle is valid, False otherwise.
     """
     assert isinstance(handle_type, HandleType) or isinstance(handle_type, int), "handle_type must be an instance of HandleType or an integer"
@@ -157,6 +231,7 @@ def ots_is_error(result: ots_result_t | _CDataBase) -> bool:
     Checks if the result indicates an error.
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is an error, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -168,6 +243,7 @@ def ots_error_message(result: ots_result_t | _CDataBase) -> str | None:
     Returns the error message from the result.
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: The error message as a string, or None if there is no error.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -179,6 +255,7 @@ def ots_error_class(result: ots_result_t | _CDataBase) -> str | None:
     Returns the error class from the result.
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: The error class as a string, or None if there is no error.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -191,6 +268,7 @@ def ots_error_code(result: ots_result_t | _CDataBase) -> int:
     Returns the error code from the result.
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: The error code as an integer, or 0 if there is no error.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -199,9 +277,11 @@ def ots_error_code(result: ots_result_t | _CDataBase) -> int:
 
 def ots_is_result(result: ots_result_t | _CDataBase | None) -> bool:
     """
-    Checks if the given result is a valid result object.
+    Checks if the given result is a valid result object. None is accepted to not raise an error.
+    This function returns also `False` if there is a valid ots_result_t* struct, but the ots_result_t.error.code is not 0, in this case :py:func:`ots_is_error` will return `True`.
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase | None
     :return: True if the result is valid, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -214,12 +294,46 @@ def ots_result_is_type(
     """
     Checks if the result is of a specific type.
 
+    .. hint::
+
+        Better use the direct functions like:
+
+        - :py:func:`ots_result_is_wipeable_string`
+
+        - :py:func:`ots_result_is_seed_indices`
+
+        - :py:func:`ots_result_is_seed_language`
+
+        - :py:func:`ots_result_is_address`
+
+        - :py:func:`ots_result_is_seed`
+
+        - :py:func:`ots_result_is_wallet`
+
+        - :py:func:`ots_result_is_transaction_description`
+
+        - :py:func:`ots_result_is_transaction_warning`
+
+        - :py:func:`ots_result_is_string`
+
+        - :py:func:`ots_result_is_boolean`
+
+        - :py:func:`ots_result_is_number`
+
+        - :py:func:`ots_result_is_comparison`
+
+        - :py:func:`ots_result_is_array`
+
+        - ots_result_data_is...
+
+        - ots_result_data_handle_is...
+
     :param result: The result to check.
-    :param result_type: The expected type of the result.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is of the specified type, False otherwise.
     """
-    assert isinstance(result_type, ResultType) or isinstance(result_type, int), "result_type must be an instance of ResultType or an integer"
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
+    assert isinstance(result_type, ResultType) or isinstance(result_type, int), "result_type must be an instance of ResultType or an integer"
     return lib.ots_result_is_type(_unwrap(result), int(result_type))
 
 
@@ -227,7 +341,16 @@ def ots_result_is_handle(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result is a handle.
 
+    .. hint::
+
+        Better use the direct functions.
+
+        .. seealso:: :py:func:`ots_result_is_type`
+
+    Retrieve the handle with :py:func:`ots_result_handle` if it is a handle.
+
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a handle, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -236,9 +359,15 @@ def ots_result_is_handle(result: ots_result_t | _CDataBase) -> bool:
 
 def ots_result_is_wipeable_string(result: ots_result_t | _CDataBase) -> bool:
     """
-    Checks if the result is a wipeable string.
+    Checks if the result is a wipeable string handle.
+    Retrieve the wipeable string handle simply with :py:func:`ots_result_handle` if it is a wipeable string, like:
+
+    .. code-block:: python
+
+        ws: ots_handle_t = ots_result_handle(result)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a wipeable string, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -247,9 +376,15 @@ def ots_result_is_wipeable_string(result: ots_result_t | _CDataBase) -> bool:
 
 def ots_result_is_seed_indices(result: ots_result_t | _CDataBase) -> bool:
     """
-    Checks if the result is a seed indices.
+    Checks if the result is a seed indices handle.
+    Retrieve the seed indices handle simply with :py:func:`ots_result_handle` if it is a seed indices, like:
+
+    .. code-block:: python
+
+        indices: ots_handle_t = ots_result_handle(result)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a seed indices, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -258,9 +393,15 @@ def ots_result_is_seed_indices(result: ots_result_t | _CDataBase) -> bool:
 
 def ots_result_is_seed_language(result: ots_result_t | _CDataBase) -> bool:
     """
-    Checks if the result is a seed language.
+    Checks if the result is a seed language handle.
+    Retrieve the seed language handle simply with :py:func:`ots_result_handle` if it is a seed language, like:
+
+    .. code-block:: python
+
+        language: ots_handle_t = ots_result_handle(result)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a seed language, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -269,9 +410,15 @@ def ots_result_is_seed_language(result: ots_result_t | _CDataBase) -> bool:
 
 def ots_result_is_address(result: ots_result_t | _CDataBase) -> bool:
     """
-    Checks if the result is an address.
+    Checks if the result is an address handle.
+    Retrieve the address handle simply with :py:func:`ots_result_handle` if it is an address, like:
+
+    .. code-block:: python
+
+        address: ots_handle_t = ots_result_handle(result)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is an address, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -280,9 +427,15 @@ def ots_result_is_address(result: ots_result_t | _CDataBase) -> bool:
 
 def ots_result_is_seed(result: ots_result_t | _CDataBase) -> bool:
     """
-    Checks if the result is a seed.
+    Checks if the result is a seed handle.
+    Retrieve the seed handle simply with :py:func:`ots_result_handle` if it is a seed, like:
+
+    .. code-block:: python
+
+        seed: ots_handle_t = ots_result_handle(result)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a seed, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -291,21 +444,30 @@ def ots_result_is_seed(result: ots_result_t | _CDataBase) -> bool:
 
 def ots_result_is_wallet(result: ots_result_t | _CDataBase) -> bool:
     """
-    Checks if the result is a wallet.
+    Checks if the result is a wallet handle.
+    Retrieve the wallet handle simply with :py:func:`ots_result_handle` if it is a wallet, like:
+
+    .. code-block:: python
+
+        wallet: ots_handle_t = ots_result_handle(result)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a wallet, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     return lib.ots_result_is_wallet(_unwrap(result))
 
 
+# TODO: something seems to be off, what is a transaction handle? Hidden until investigation is done.
 def ots_result_is_transaction(result: ots_result_t | _CDataBase) -> bool:
     """
-    Checks if the result is a transaction.
+    Checks if the result is a transaction handle.
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a transaction, False otherwise.
+    :meta private:
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     return lib.ots_result_is_transaction(_unwrap(result))
@@ -313,9 +475,15 @@ def ots_result_is_transaction(result: ots_result_t | _CDataBase) -> bool:
 
 def ots_result_is_transaction_description(result: ots_result_t | _CDataBase) -> bool:
     """
-    Checks if the result is a transaction description.
+    Checks if the result is a transaction description handle.
+    Retrieve the transaction description handle simply with :py:func:`ots_result_handle` if it is a transaction description, like:
+
+    .. code-block:: python
+
+        tx_description: ots_handle_t = ots_result_handle(result)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a transaction description, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -324,9 +492,15 @@ def ots_result_is_transaction_description(result: ots_result_t | _CDataBase) -> 
 
 def ots_result_is_transaction_warning(result: ots_result_t | _CDataBase) -> bool:
     """
-    Checks if the result is a transaction warning.
+    Checks if the result is a transaction warning handle.
+    Retrieve the transaction warning handle simply with :py:func:`ots_result_handle` if it is a transaction warning, like:
+
+    .. code-block:: python
+
+        tx_warning: ots_handle_t = ots_result_handle(result)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a transaction warning, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -336,8 +510,23 @@ def ots_result_is_transaction_warning(result: ots_result_t | _CDataBase) -> bool
 def ots_result_is_string(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result is a string.
+    Retrieve the string simply with :py:func:`ots_result_string` if it is a string, like:
+
+    .. code-block:: python
+
+        string: str | None = ots_result_string(result)
+
+        # if checked before with `ots_result_is_string`
+        # no need to check for None
+        string: str = ots_result_string(result)
+
+    .. note::
+
+        Avoid :py:func:`ots_result_string_copy` to avoid double copying the
+        string as CFFI anyways copies the string.
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a string, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -347,8 +536,14 @@ def ots_result_is_string(result: ots_result_t | _CDataBase) -> bool:
 def ots_result_is_boolean(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result is a boolean.
+    Retrieve the boolean simply with :py:func:`ots_result_boolean` if it is a boolean, like:
+
+    .. code-block:: python
+
+        boolean: bool = ots_result_boolean(result)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a boolean, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -357,9 +552,15 @@ def ots_result_is_boolean(result: ots_result_t | _CDataBase) -> bool:
 
 def ots_result_is_number(result: ots_result_t | _CDataBase) -> bool:
     """
-    Checks if the result is a number.
+    Checks if the result is a (unsigned) number.
+    Retrieve the number simply with :py:func:`ots_result_number` if it is a number, like:
+
+    .. code-block:: python
+
+        number: int = ots_result_number(result)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is a number, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -373,8 +574,16 @@ def ots_result_data_is_type(
     """
     Checks if the result data is of a specific type.
 
+    .. hint::
+
+        Better use the direct functions like:
+
+        - `ots_result_data_is_...`
+
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :param data_type: The expected type of the result data.
+    :type data_type: DataType | int
     :return: True if the result data is of the specified type, False otherwise.
     """
     assert isinstance(data_type, DataType) or isinstance(data_type, int), "data_type must be an instance of DataType or an integer"
@@ -387,6 +596,7 @@ def ots_result_data_is_reference(result: ots_result_t | _CDataBase) -> bool:
     Checks if the result data is a reference.
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result data is a reference, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -396,8 +606,25 @@ def ots_result_data_is_reference(result: ots_result_t | _CDataBase) -> bool:
 def ots_result_data_is_int(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result data is an integer.
+    Retrieve the integer simply with :py:func:`ots_result_int_array` or :py:func:`ots_result_int_array_reference` if it is an integer array, like:
+
+    .. code-block:: python
+
+        int_value: list[int] = ots_result_int_array(result)
+
+        # or
+
+        int_value: list[int] = ots_result_int_array_reference(result)
+
+    It is also possible to get the entries one by one with :py:func:`ots_result_array_get_int` if it is an integer array, like:
+
+    .. code-block:: python
+
+        for i in range(ots_result_size(result)):
+            int_value: int = ots_result_array_get_int(result, i)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result data is an integer, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -407,8 +634,32 @@ def ots_result_data_is_int(result: ots_result_t | _CDataBase) -> bool:
 def ots_result_data_is_char(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result data is a character.
+    Retrieve the character simply with :py:func:`ots_result_char_array` or :py:func:`ots_result_char_array_reference` if it is a character array, like:
+
+    .. code-block:: python
+
+        chars: bytes = ots_result_char_array(result)
+
+    Or as uint8 values:
+
+    .. code-block:: python
+
+        chars: list[int] = ots_result_char_array_uint8(result)
+
+    Or as a single character with :py:func:`ots_result_array_get_char` and :py:func:`ots_result_array_get_uint8` if it is a character array, like:
+
+    .. code-block:: python
+
+        for i in range(ots_result_size(result)):
+            char: bytes = ots_result_array_get_char(result, i)
+
+        # or
+
+        for i in range(ots_result_size(result)):
+            char: int = ots_result_array_get_uint8(result, i)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result data is a character, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -418,8 +669,12 @@ def ots_result_data_is_char(result: ots_result_t | _CDataBase) -> bool:
 def ots_result_data_is_uint8(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result data is an unsigned 8-bit integer.
+    Retrieve the unsigned 8-bit integer simply with :py:func:`ots_result_uint8_array` or :py:func:`ots_result_uint8_array_reference` if it is an unsigned 8-bit integer array. Or as a single unsigned 8-bit integer with :py:func:`ots_result_array_get_uint8` if it is an unsigned 8-bit integer array.
+
+    .. seealso:: :py:func:`ots_result_data_is_char`
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result data is an unsigned 8-bit integer, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -429,8 +684,25 @@ def ots_result_data_is_uint8(result: ots_result_t | _CDataBase) -> bool:
 def ots_result_data_is_uint16(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result data is an unsigned 16-bit integer.
+    Retrieve the unsigned 16-bit integer simply with :py:func:`ots_result_uint16_array` or :py:func:`ots_result_uint16_array_reference` if it is an unsigned 16-bit integer array, like:
+
+    .. code-block:: python
+
+        uint16_values: list[int] = ots_result_uint16_array(result)
+
+        #or
+
+        uint16_values: list[int] = ots_result_uint16_array_reference(result)
+
+    Or as a single unsigned 16-bit integer with :py:func:`ots_result_array_get_uint16` if it is an unsigned 16-bit integer array, like:
+
+    .. code-block:: python
+
+        for i in range(ots_result_size(result)):
+            uint16_value: int = ots_result_array_get_uint16(result, i)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result data is an unsigned 16-bit integer, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -440,8 +712,25 @@ def ots_result_data_is_uint16(result: ots_result_t | _CDataBase) -> bool:
 def ots_result_data_is_uint32(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result data is an unsigned 32-bit integer.
+    Retrieve the unsigned 32-bit integer simply with :py:func:`ots_result_uint32_array` or :py:func:`ots_result_uint32_array_reference` if it is an unsigned 32-bit integer array, like:
+
+    .. code-block:: python
+
+        uint32_values: list[int] = ots_result_uint32_array(result)
+
+        # or
+
+        uint32_values: list[int] = ots_result_uint32_array_reference(result)
+
+    Or as a single unsigned 32-bit integer with :py:func:`ots_result_array_get_uint32` if it is an unsigned 32-bit integer array, like:
+
+    .. code-block:: python
+
+        for i in range(ots_result_size(result)):
+            uint32_value: int = ots_result_array_get_uint32(result, i)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result data is an unsigned 32-bit integer, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -451,8 +740,25 @@ def ots_result_data_is_uint32(result: ots_result_t | _CDataBase) -> bool:
 def ots_result_data_is_uint64(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result data is an unsigned 64-bit integer.
+    Retrieve the unsigned 64-bit integer simply with :py:func:`ots_result_uint64_array` or :py:func:`ots_result_uint64_array_reference` if it is an unsigned 64-bit integer array, like:
+
+    .. code-block:: python
+
+        uint64_values: list[int] = ots_result_uint64_array(result)
+
+        # or
+
+        uint64_values: list[int] = ots_result_uint64_array_reference(result)
+
+    Or as a single unsigned 64-bit integer with :py:func:`ots_result_array_get_uint64` if it is an unsigned 64-bit integer array, like:
+
+    .. code-block:: python
+
+        for i in range(ots_result_size(result)):
+            uint64_value: int = ots_result_array_get_uint64(result, i)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result data is an unsigned 64-bit integer, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -462,8 +768,25 @@ def ots_result_data_is_uint64(result: ots_result_t | _CDataBase) -> bool:
 def ots_result_data_is_handle(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result data is a handle.
+    Retrieve the handle simply with :py:func:`ots_result_handle_array` or :py:func:`ots_result_handle_array_reference` if it is a handle array, like:
+
+    .. code-block:: python
+
+        handles: list[ots_handle_t] = ots_result_handle_array(result)
+
+        # or
+
+        handles: list[ots_handle_t] = ots_result_handle_array_reference(result)
+
+    Or as a single handle with :py:func:`ots_result_array_get_handle` if it is a handle array, like:
+
+    .. code-block:: python
+
+        for i in range(ots_result_size(result)):
+            handle: ots_handle_t = ots_result_array_get_handle(result, i)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result data is a handle, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -472,18 +795,26 @@ def ots_result_data_is_handle(result: ots_result_t | _CDataBase) -> bool:
 
 def ots_result_data_handle_is_type(
     result: ots_result_t | _CDataBase,
-    handle_type: int
+    handle_type: HandleType | int
 ) -> bool:
     """
     Checks if the result data handle is of a specific type.
 
+    .. hint::
+
+        Better use the direct functions like:
+
+        - `ots_result_data_handle_is_...`
+
     :param result: The result to check.
-    :param type: The expected type of the handle.
+    :type result: ots_result_t | _CDataBase
+    :param handle_type: The expected type of the handle.
+    :type handle_type: HandleType | int
     :return: True if the handle is of the specified type, False otherwise.
     """
     assert isinstance(handle_type, HandleType) or isinstance(handle_type, int), "handle_type must be an instance of HandleType or an integer"
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    return lib.ots_result_data_handle_is_type(_unwrap(handle_type))
+    return lib.ots_result_data_handle_is_type(_unwrap(result), int(handle_type))
 
 
 def ots_result_data_handle_is_reference(
@@ -493,6 +824,7 @@ def ots_result_data_handle_is_reference(
     Checks if the result data handle is a reference.
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the handle is a reference, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -504,8 +836,25 @@ def ots_result_data_handle_is_wipeable_string(
 ) -> bool:
     """
     Checks if the result data handle is a wipeable string.
+    Retrieve the wipeable string handle simply with :py:func:`ots_result_handle_array` or :py:func:`ots_result_handle_array_reference` if it is a wipeable string handle array, like:
+
+    .. code-block:: python
+
+        wipeable_strings: list[ots_handle_t] = ots_result_handle_array(result)
+
+        # or
+
+        wipeable_strings: list[ots_handle_t] = ots_result_handle_array_reference(result)
+
+    Or as a single wipeable string handle with :py:func:`ots_result_array_get_handle` if it is a wipeable string handle array, like:
+
+    .. code-block:: python
+
+        for i in range(ots_result_size(result)):
+            wipeable_string: ots_handle_t = ots_result_array_get_handle(result, i)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the handle is a wipeable string, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -517,6 +866,14 @@ def ots_result_data_handle_is_seed_indices(
 ) -> bool:
     """
     Checks if the result data handle is seed indices.
+
+    .. seealso:: How to retrieve the handles:
+
+        :py:func:`ots_result_data_is_handle`
+
+        and
+
+        :py:func:`ots_result_data_handle_is_wipeable_string`
 
     :param result: The result to check.
     :return: True if the handle is seed indices, False otherwise.
@@ -531,6 +888,15 @@ def ots_result_data_handle_is_seed_language(
     """
     Checks if the result data handle is a seed language.
 
+    .. seealso:: How to retrieve the handles:
+
+        :py:func:`ots_result_data_is_handle`
+
+        and
+
+        :py:func:`ots_result_data_handle_is_wipeable_string`
+
+
     :param result: The result to check.
     :return: True if the handle is a seed language, False otherwise.
     """
@@ -543,6 +909,15 @@ def ots_result_data_handle_is_address(
 ) -> bool:
     """
     Checks if the result data handle is an address.
+
+    .. seealso:: How to retrieve the handles:
+
+        :py:func:`ots_result_data_is_handle`
+
+        and
+
+        :py:func:`ots_result_data_handle_is_wipeable_string`
+
 
     :param result: The result to check.
     :return: True if the handle is an address, False otherwise.
@@ -557,6 +932,15 @@ def ots_result_data_handle_is_seed(
     """
     Checks if the result data handle is a seed.
 
+    .. seealso:: How to retrieve the handles:
+
+        :py:func:`ots_result_data_is_handle`
+
+        and
+
+        :py:func:`ots_result_data_handle_is_wipeable_string`
+
+
     :param result: The result to check.
     :return: True if the handle is a seed, False otherwise.
     """
@@ -570,6 +954,15 @@ def ots_result_data_handle_is_wallet(
     """
     Checks if the result data handle is a wallet.
 
+    .. seealso:: How to retrieve the handles:
+
+        :py:func:`ots_result_data_is_handle`
+
+        and
+
+        :py:func:`ots_result_data_handle_is_wipeable_string`
+
+
     :param result: The result to check.
     :return: True if the handle is a wallet, False otherwise.
     """
@@ -577,13 +970,24 @@ def ots_result_data_handle_is_wallet(
     return lib.ots_result_data_handle_is_wallet(_unwrap(result))
 
 
+# TODO: something seems to be off, what is a transaction handle? Hidden until investigation is done.
 def ots_result_data_handle_is_transaction(
     result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result data handle is a transaction.
 
+    .. seealso:: How to retrieve the handles:
+
+        :py:func:`ots_result_data_is_handle`
+
+        and
+
+        :py:func:`ots_result_data_handle_is_wipeable_string`
+
+
     :param result: The result to check.
     :return: True if the handle is a transaction, False otherwise.
+    :meta private:
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     return lib.ots_result_data_handle_is_transaction(_unwrap(result))
@@ -594,6 +998,15 @@ def ots_result_data_handle_is_transaction_description(
 ) -> bool:
     """
     Checks if the result data handle is a transaction description.
+
+    .. seealso:: How to retrieve the handles:
+
+        :py:func:`ots_result_data_is_handle`
+
+        and
+
+        :py:func:`ots_result_data_handle_is_wipeable_string`
+
 
     :param result: The result to check.
     :return: True if the handle is a transaction description, False otherwise.
@@ -608,6 +1021,15 @@ def ots_result_data_handle_is_transaction_warning(
     """
     Checks if the result data handle is a transaction warning.
 
+    .. seealso:: How to retrieve the handles:
+
+        :py:func:`ots_result_data_is_handle`
+
+        and
+
+        :py:func:`ots_result_data_handle_is_wipeable_string`
+
+
     :param result: The result to check.
     :return: True if the handle is a transaction warning, False otherwise.
     """
@@ -618,6 +1040,10 @@ def ots_result_data_handle_is_transaction_warning(
 def ots_result_handle(result: ots_result_t | _CDataBase) -> ots_handle_t:
     """
     Returns the handle from the result.
+
+    .. code-block:: python
+
+        handle: ots_handle_t = ots_result_handle(result)
 
     :param result: The result to get the handle from.
     :return: An ots_handle_t object containing the handle, or None if there is no handle.
@@ -633,8 +1059,16 @@ def ots_result_handle_is_type(
     """
     Checks if the result handle is of a specific type.
 
+    .. hint::
+
+        Better use the direct functions like:
+
+        - `ots_result_handle_is_...`
+
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :param type: The expected type of the handle.
+    :type type: HandleType | int
     :return: True if the handle is of the specified type, False otherwise.
     """
     assert isinstance(type, HandleType) or isinstance(type, int), "type must be an instance of HandleType or an integer"
@@ -657,7 +1091,16 @@ def ots_result_string(result: ots_result_t | _CDataBase) -> str | None:
     """
     Returns the string from the result.
 
+    .. code-block:: python
+
+        string: str | None = ots_result_string(result)
+
+        # if checked before with `ots_result_is_string`
+        # no need to check for None
+        string: str = ots_result_string(result)
+
     :param result: The result to get the string from.
+    :result: ots_result_t | _CDataBase
     :return: The string as a UTF-8 encoded string, or None if there is no string.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -672,7 +1115,12 @@ def ots_result_string_copy(
     Returns a copy of the string from the result.
     (In Python this is the same result as ots_result_string)
 
+    .. warning::
+
+        This function copies the string, which is not necessary in Python as CFFI already does this. Do not use, use instead :py:func:`ots_result_string`.
+
     :param result: The result to get the string from.
+    :type result: ots_result_t | _CDataBase
     :return: A copy of the string as a UTF-8 encoded string, or None if there is no string.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -687,8 +1135,14 @@ def ots_result_boolean(
     """
     Returns the boolean value from the result.
 
+    .. code-block:: python
+
+        boolean: bool = ots_result_boolean(result)
+
     :param result: The result to get the boolean from.
+    :type result: ots_result_t | _CDataBase
     :param default_value: The default value to return if the result is not a boolean.
+    :type default_value: bool
     :return: The boolean value, or the default value if the result is not a boolean.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -702,8 +1156,14 @@ def ots_result_number(
     """
     Returns the number from the result.
 
+    .. code-block:: python
+
+        number: int = ots_result_number(result)
+
     :param result: The result to get the number from.
-    :param default_value: The default value to return if the result is not a number.
+    :type result: ots_result_t | _CDataBase
+    :param default_value: The default value to return if the result is not a number. By default it is -1 which can not be returned by the C function how it is unsigned.
+    :type default_value: int
     :return: The number as an integer, or the default value if the result is not a number.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -715,6 +1175,19 @@ def ots_result_array(
 ) -> _CDataBase:
     """
     Returns the array from the result.
+
+    .. hint::
+
+        No need to use, use simply the dedicated functions like:
+
+        - `ots_result_handle_array`
+
+        - `ots_result_int_array`
+
+        - `ots_result_char_array`
+
+        and so on.
+
     :param result: The result to get the array from.
     :return: _CDataBase objects representing the array elements.
     """
@@ -730,8 +1203,21 @@ def ots_result_array_get(
     """
     Returns the element at the specified index from the result array.
 
+    .. hint::
+
+        No need to use, use simply the dedicated functions like:
+
+        - `ots_result_array_get_handle`
+
+        - `ots_result_array_get_int`
+
+        - `ots_result_array_get_char`
+
+        and so on.
+
     :param result: The result to get the element from.
-    :param index: The index of the element to retrieve.
+    :type result: ots_result_t | _CDataBase
+    :param int index: The index of the element to retrieve.
     :return: The element at the specified index, or None if the index is out of bounds.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -747,8 +1233,13 @@ def ots_result_array_get_handle(
     """
     Returns the handle at the specified index from the result array.
 
+    .. code-block:: python
+
+        handle: ots_handle_t = ots_result_array_get_handle(result, index)
+
     :param result: The result to get the handle from.
-    :param index: The index of the handle to retrieve.
+    :type result: ots_result_t | _CDataBase
+    :param int index: The index of the handle to retrieve.
     :return: An ots_handle_t object containing the handle at the specified index, or None if the index is out of bounds.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -765,8 +1256,13 @@ def ots_result_array_get_int(
     """
     Returns the integer at the specified index from the result array.
 
+    .. code-block:: python
+
+        int_value: int = ots_result_array_get_int(result, index)
+
     :param result: The result to get the integer from.
-    :param index: The index of the integer to retrieve.
+    :type result: ots_result_t | _CDataBase
+    :param int index: The index of the integer to retrieve.
     :return: The integer at the specified index, or None if the index is out of bounds.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -782,6 +1278,10 @@ def ots_result_array_get_char(
 ) -> bytes:
     """
     Returns the character at the specified index from the result array.
+
+    .. code-block:: python
+
+        char: bytes = ots_result_array_get_char(result, index)
 
     :param result: The result to get the character from.
     :param index: The index of the character to retrieve.
@@ -801,6 +1301,10 @@ def ots_result_array_get_uint8(
     """
     Returns the unsigned 8-bit integer at the specified index from the result array.
 
+    .. code-block:: python
+
+        uint8_value: int = ots_result_array_get_uint8(result, index)
+
     :param result: The result to get the unsigned 8-bit integer from.
     :param index: The index of the unsigned 8-bit integer to retrieve.
     :return: The unsigned 8-bit integer at the specified index, or None if the index is out of bounds.
@@ -818,6 +1322,11 @@ def ots_result_array_get_uint16(
 ) -> int:
     """
     Returns the unsigned 16-bit integer at the specified index from the result array.
+
+    .. code-block:: python
+
+        uint16_value: int = ots_result_array_get_uint16(result, index)
+
     :param result: The result to get the unsigned 16-bit integer from.
     :param index: The index of the unsigned 16-bit integer to retrieve.
     :return: The unsigned 16-bit integer at the specified index
@@ -835,6 +1344,11 @@ def ots_result_array_get_uint32(
 ) -> int:
     """
     Returns the unsigned 32-bit integer at the specified index from the result array.
+
+    .. code-block:: python
+
+        uint32_value: int = ots_result_array_get_uint32(result, index)
+
     :param result: The result to get the unsigned 32-bit integer from.
     :param index: The index of the unsigned 32-bit integer to retrieve.
     :return: The unsigned 32-bit integer at the specified index
@@ -849,6 +1363,11 @@ def ots_result_array_get_uint32(
 def ots_result_array_get_uint64(result: _CDataBase|None, index: int) -> int:
     """
     Returns the unsigned 64-bit integer at the specified index from the result array.
+
+    .. code-block:: python
+
+        uint64_value: int = ots_result_array_get_uint64(result, index)
+
     :param result: The result to get the unsigned 64-bit integer from.
     :param index: The index of the unsigned 64-bit integer to retrieve.
     :return: The unsigned 64-bit integer at the specified index
@@ -866,6 +1385,10 @@ def ots_result_array_reference(
     """
     Returns a reference to the array from the result.
 
+    .. hint::
+
+        No need to use, use simply the dedicated functions instead.
+
     :param result: The result to get the array reference from.
     :return: A _CDataBase object representing the array reference.
     """
@@ -879,6 +1402,10 @@ def ots_result_handle_array_reference(
 ) -> list[ots_handle_t]:
     """
     Returns a reference to the array of handles from the result.
+
+    .. code-block:: python
+
+        handles: list[ots_handle_t] = ots_result_handle_array_reference(result)
 
     :param result: The result to get the handle array reference from.
     :return: A list of ots_handle_t objects representing the handle array reference.
@@ -895,6 +1422,11 @@ def ots_result_int_array_reference(
 ) -> list[int]:
     """
     Returns a reference to the array of integers from the result.
+
+    .. code-block:: python
+
+        int_values: list[int] = ots_result_int_array_reference(result)
+
     :param result: The result to get the integer array reference from.
     :return: A list of integers representing the integer array reference.
     """
@@ -908,6 +1440,11 @@ def ots_result_int_array_reference(
 def ots_result_char_array_reference(result: _CDataBase|None) -> bytes:
     """
     Returns a reference to the array of characters from the result.
+
+    .. code-block:: python
+
+        char_array: bytes = ots_result_char_array_reference(result)
+
     :param result: The result to get the character array reference from.
     :return: bytes representing the character array reference.
     """
@@ -922,6 +1459,10 @@ def ots_result_uint8_array_reference(
 ) -> list[int]:
     """
     Returns a reference to the array of unsigned 8-bit integers from the result.
+
+    .. code-block:: python
+
+        uint8_values: list[int] = ots_result_uint8_array_reference(result)
 
     :param result: The result to get the unsigned 8-bit integer array reference from.
     :return: A list of unsigned 8-bit integers representing the unsigned 8-bit integer array reference.
@@ -944,6 +1485,10 @@ def ots_result_uint16_array_reference(result: ots_result_t | _CDataBase) -> list
     """
     Returns a reference to the array of unsigned 16-bit integers from the result.
 
+    .. code-block:: python
+
+        uint16_values: list[int] = ots_result_uint16_array_reference(result)
+
     :param result: The result to get the unsigned 16-bit integer array reference from.
     :return: A list of unsigned 16-bit integers representing the unsigned 16-bit integer array reference.
     """
@@ -964,6 +1509,10 @@ def ots_result_uint16_array_reference(result: ots_result_t | _CDataBase) -> list
 def ots_result_uint32_array_reference(result: ots_result_t | _CDataBase) -> list[int]:
     """
     Returns a reference to the array of unsigned 32-bit integers from the result.
+
+    .. code-block:: python
+
+        uint32_values: list[int] = ots_result_uint32_array_reference(result)
 
     :param result: The result to get the unsigned 32-bit integer array reference from.
     :return: A list of unsigned 32-bit integers representing the unsigned 32-bit integer array reference.
@@ -986,6 +1535,10 @@ def ots_result_uint64_array_reference(result: ots_result_t | _CDataBase) -> list
     """
     Returns a reference to the array of unsigned 64-bit integers from the result.
 
+    .. code-block:: python
+
+        uint64_values: list[int] = ots_result_uint64_array_reference(result)
+
     :param result: The result to get the unsigned 64-bit integer array reference from.
     :return: A list of unsigned 64-bit integers representing the unsigned 64-bit integer array reference.
     """
@@ -1003,9 +1556,13 @@ def ots_result_uint64_array_reference(result: ots_result_t | _CDataBase) -> list
     ]
 
 
-def ots_result_handle_array(result: ots_result_t | _CDataBase) -> list[_CDataBase]:
+def ots_result_handle_array(result: ots_result_t | _CDataBase) -> list[ots_handle_t]:
     """
     Returns a list of handles from the result array.
+
+    .. code-block:: python
+
+        handles: list[ots_handle_t] = ots_result_handle_array(result)
 
     :param result: The result to get the handles from.
     :return: A list of _CDataBase objects representing the handles in the result array.
@@ -1021,6 +1578,10 @@ def ots_result_int_array(result: ots_result_t | _CDataBase) -> list[int]:
     """
     Returns a list of integers from the result array.
 
+    .. code-block:: python
+
+        int_values: list[int] = ots_result_int_array(result)
+
     :param result: The result to get the integers from.
     :return: A list of integers representing the integers in the result array.
     """
@@ -1035,6 +1596,10 @@ def ots_result_char_array(result: ots_result_t | _CDataBase) -> bytes:
     """
     Returns a byte string representing the character array from the result.
 
+    .. code-block:: python
+
+        char_array: bytes = ots_result_char_array(result)
+
     :param result: The result to get the character array from.
     :return: A byte string representing the character array.
     """
@@ -1048,6 +1613,10 @@ def ots_result_char_array(result: ots_result_t | _CDataBase) -> bytes:
 def ots_result_uint8_array(result: ots_result_t | _CDataBase) -> list[int]:
     """
     Returns a list of unsigned 8-bit integers from the result array.
+
+    .. code-block:: python
+
+        uint8_values: list[int] = ots_result_uint8_array(result)
 
     :param result: The result to get the unsigned 8-bit integers from.
     :return: A list of unsigned 8-bit integers representing the unsigned 8-bit integers in the result array.
@@ -1070,6 +1639,10 @@ def ots_result_uint16_array(result: ots_result_t | _CDataBase) -> list[int]:
     """
     Returns a list of unsigned 16-bit integers from the result array.
 
+    .. code-block:: python
+
+        uint16_values: list[int] = ots_result_uint16_array(result)
+
     :param result: The result to get the unsigned 16-bit integers from.
     :return: A list of unsigned 16-bit integers representing the unsigned 16-bit integers in the result array.
     """
@@ -1090,6 +1663,10 @@ def ots_result_uint16_array(result: ots_result_t | _CDataBase) -> list[int]:
 def ots_result_uint32_array(result: ots_result_t | _CDataBase) -> list[int]:
     """
     Returns a list of unsigned 32-bit integers from the result array.
+
+    .. code-block:: python
+
+        uint32_values: list[int] = ots_result_uint32_array(result)
 
     :param result: The result to get the unsigned 32-bit integers from.
     :return: A list of unsigned 32-bit integers representing the unsigned 32-bit integers in the result array.
@@ -1112,6 +1689,10 @@ def ots_result_uint64_array(result: ots_result_t | _CDataBase) -> list[int]:
     """
     Returns a list of unsigned 64-bit integers from the result array.
 
+    .. code-block:: python
+
+        uint64_values: list[int] = ots_result_uint64_array(result)
+
     :param result: The result to get the unsigned 64-bit integers from.
     :return: A list of unsigned 64-bit integers representing the unsigned 64-bit integers in the result array.
     """
@@ -1133,7 +1714,22 @@ def ots_result_is_array(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result is an array.
 
+    .. hint::
+
+        Check directly for what to expect in the array, like:
+
+        - `ots_result_data_is_handle`
+
+        - `ots_result_data_is_int`
+
+        - `ots_result_data_is_char`
+
+        - `ots_result_data_is_uint8`
+
+        and so on.
+
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :return: True if the result is an array, False otherwise.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
@@ -1143,6 +1739,16 @@ def ots_result_is_array(result: ots_result_t | _CDataBase) -> bool:
 def ots_result_is_comparison(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result is a comparison result.
+    To retrieve the comparison result, use :py:func:`ots_result_comparison`,
+    or if only interested if the result is equal, use :py:func:`ots_result_is_equal`.
+    Like:
+
+    .. code-block:: python
+
+        # is smaller than
+        if ots_result_is_comparison(result) and ots_result_comparison(result) < 0:
+        # is equal to
+        if ots_result_is_comparison(result) and ots_result_is_equal(result):
 
     :param result: The result to check.
     :return: True if the result is a comparison result, False otherwise.
@@ -1155,6 +1761,10 @@ def ots_result_comparison(result: ots_result_t | _CDataBase) -> int:
     """
     Returns the comparison result.
 
+    .. code-block:: python
+
+        comparison: int = ots_result_comparison(result)
+
     :param result: The result to get the comparison from.
     :return: The comparison result as an integer.
     """
@@ -1166,6 +1776,10 @@ def ots_result_is_equal(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result is equal to another result.
 
+    .. code-block:: python
+
+        is_equal: bool = ots_result_is_equal(result)
+
     :param result: The result to check.
     :return: True if the result is equal, False otherwise.
     """
@@ -1175,7 +1789,11 @@ def ots_result_is_equal(result: ots_result_t | _CDataBase) -> bool:
 
 def ots_result_size(result: ots_result_t | _CDataBase) -> int:
     """
-    Returns the size of the result.
+    Returns the size of the result if the result is an array or a string.
+
+    .. code-block:: python
+
+        size: int = ots_result_size(result)
 
     :param result: The result to get the size from.
     :return: The size of the result as an integer.
@@ -1187,6 +1805,8 @@ def ots_result_size(result: ots_result_t | _CDataBase) -> int:
 def ots_result_is_address_type(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result is an address type.
+    If the result is an address type, you can check the type of the address using
+    :py:func:`ots_result_address_type_is_type`.
 
     :param result: The result to check.
     :return: True if the result is an address type, False otherwise.
@@ -1202,8 +1822,14 @@ def ots_result_address_type_is_type(
     """
     Checks if the result address type is of a specific type.
 
+    .. code-block:: python
+
+        is_type: bool = ots_result_address_type_is_type(result, AddressType.STANDARD)
+
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :param type: The expected type of the address.
+    :type type: AddressType | int
     :return: True if the address is of the specified type, False otherwise.
     """
     assert isinstance(type, AddressType) or isinstance(type, int), "type must be an instance of AddressType or an integer"
@@ -1214,6 +1840,8 @@ def ots_result_address_type_is_type(
 def ots_result_is_address_index(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result is an address index.
+    If the result is an address index, you can retrieve the account and index using
+    :py:func:`ots_result_address_index_account` and :py:func:`ots_result_address_index_index`.
 
     :param result: The result to check.
     :return: True if the result is an address index, False otherwise.
@@ -1226,6 +1854,10 @@ def ots_result_address_index_account(result: ots_result_t | _CDataBase) -> int:
     """
     Returns the account index from the result address index.
 
+    .. code-block:: python
+
+        account_index: int = ots_result_address_index_account(result)
+
     :param result: The result to get the account index from.
     :return: The account index as an integer.
     """
@@ -1237,6 +1869,10 @@ def ots_result_address_index_index(result: ots_result_t | _CDataBase) -> int:
     """
     Returns the index from the result address index.
 
+    .. code-block:: python
+
+        index: int = ots_result_address_index_index(result)
+
     :param result: The result to get the index from.
     :return: The index as an integer.
     """
@@ -1247,6 +1883,9 @@ def ots_result_address_index_index(result: ots_result_t | _CDataBase) -> int:
 def ots_result_is_network(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result is a network type.
+    If the result is a network type, you can retrieve the network using
+    :py:func:`ots_result_network` to get the network type or to check
+    the network type using :py:func:`ots_result_network_is_type`.
 
     :param result: The result to check.
     :return: True if the result is a network type, False otherwise.
@@ -1258,6 +1897,10 @@ def ots_result_is_network(result: ots_result_t | _CDataBase) -> bool:
 def ots_result_network(result: ots_result_t | _CDataBase) -> Network:
     """
     Returns the network from the result.
+
+    .. code-block:: python
+
+        network: Network = ots_result_network(result)
 
     :param result: The result to get the network from.
     :return: The network as a Network object.
@@ -1273,6 +1916,10 @@ def ots_result_network_is_type(
     """
     Checks if the result network is of a specific type.
 
+    .. code-block:: python
+
+        is_type: bool = ots_result_network_is_type(result, Network.MAIN)
+
     :param result: The result to check.
     :param network: The expected type of the network.
     :return: True if the network is of the specified type, False otherwise.
@@ -1285,6 +1932,9 @@ def ots_result_network_is_type(
 def ots_result_is_seed_type(result: ots_result_t | _CDataBase) -> bool:
     """
     Checks if the result is a seed type.
+    If the result is a seed type, you can retrieve the seed type using
+    :py:func:`ots_result_seed_type` or check the seed type using
+    :py:func:`ots_result_seed_type_is_type`.
 
     :param result: The result to check.
     :return: True if the result is a seed type, False otherwise.
@@ -1296,6 +1946,10 @@ def ots_result_is_seed_type(result: ots_result_t | _CDataBase) -> bool:
 def ots_result_seed_type(result: ots_result_t | _CDataBase) -> SeedType:
     """
     Returns the seed type from the result.
+
+    .. code-block:: python
+
+        seed_type: SeedType = ots_result_seed_type(result)
 
     :param result: The result to get the seed type from.
     :return: The seed type as a SeedType object.
@@ -1311,6 +1965,10 @@ def ots_result_seed_type_is_type(
     """
     Checks if the result seed type is of a specific type.
 
+    .. code-block:: python
+
+        is_type: bool = ots_result_seed_type_is_type(result, SeedType.MONERO)
+
     :param result: The result to check.
     :param type: The expected type of the seed.
     :return: True if the seed is of the specified type, False otherwise.
@@ -1319,6 +1977,7 @@ def ots_result_seed_type_is_type(
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     return lib.ots_result_seed_type_is_type(_unwrap(result), int(type))
 
+# TODO: continue here with the rest of the documentation
 
 def ots_free_string(string: _CDataBase) -> None:
     """
