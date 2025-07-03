@@ -28,21 +28,28 @@ class Seed:
         self._wallet: Wallet | None = None
 
     def __str__(self):
+        """
+        :return: The fingerprint of the seed.
+        """
         return self.fingerprint
 
     def __repr__(self):
+        """
+        :meta private:
+        """
         return f"Seed({str(self)})"
 
     def __hash__(self):
         """
         Returns the hash of the Seed instance.
+        :meta private:
         """
-        return hash(self.__class__.__name__, self.handle)
+        return hash((self.__class__.__name__, self.handle))
 
     @property
     def type(self) -> SeedType:
         """
-        Returns the type of the seed.
+        :return: The type of the seed.
         """
         if self._type is not None:
             return self._type
@@ -56,6 +63,8 @@ class Seed:
     def isLegacy(self) -> bool:
         """
         Checks if the seed is a legacy seed.
+
+        :return: True if the seed is a legacy seed, False otherwise.
         """
         if self._isLegacy is not None:
             return self._isLegacy
@@ -70,7 +79,8 @@ class Seed:
         Returns the seed phrase in the specified language.
 
         :param language: The language of the seed phrase.
-        :param password: Optional password to encrypt the seed phrase. Not supported for legacy seeds.
+        :param password: Optional password to encrypt the seed phrase. Not supported for legacy seeds. Works different on Monero Seeds and Polyseeds. While on Monero Seeds the password is the offset passphrase, on a Polyseed it is the actual password. Polyseed also support passphrase offset, but needs to be set on creating the Polyseed and decoding the polyseed. While on the Monero Seed password (offset passphrase in this case) is substracted on generating the seed phrase, before generating the seed phrase.
+
         :return: A WipeableString containing the seed phrase.
         """
         assert isinstance(language, SeedLanguage), "language must be an instance of SeedLanguage"
@@ -99,7 +109,7 @@ class Seed:
         """
         Returns the fingerprint of the seed.
 
-        :return: A string representing the fingerprint of the seed.
+        :return: A last 6 digit upper case hex string from sha256(base58 standard addres) representing the fingerprint of the seed.
         """
         if self._fingerprint is not None:
             return self._fingerprint
@@ -112,7 +122,7 @@ class Seed:
     @property
     def address(self) -> Address:
         """
-        Returns the address associated with the seed.
+        Returns the standard address of the seed.
 
         :return: An Address object representing the seed's address.
         """

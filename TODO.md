@@ -27,7 +27,7 @@
 - [x] setup.py: pip install script
 - [x] Automatic `_ots.o` build into /ots on pip install git+https://github.com/MoneroSDK/ots-python.git
       will probably get a bit tricky
-- [ ] setup.py: test
+- [x] setup.py: test
 - [x] drop ots_cdef.h generation, was only for debug purposes
 - [ ] Go through all TODO tags in the code, and remove TODO.md
 

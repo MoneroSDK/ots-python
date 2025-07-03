@@ -3659,9 +3659,15 @@ def ots_seed_jar_transfer_seed_in(
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(seed, (ots_handle_t, _CDataBase)), "seed must be an instance of ots_handle_t or _CDataBase"
-    assert HandleType(_unwrap(seed).type) == HandleType.SEED, "seed must be of type HandleType.SEED"
+    assert isinstance(seed, _CDataBase) or seed.type == HandleType.SEED, "seed must be of type HandleType.SEED"
+    assert isinstance(seed, ots_handle_t) or ffi.typeof(seed) == ffi.typeof('ots_handle_t **'), "seed must be a pointer of a pointer to ots_handle_t"
     assert isinstance(name, str), "name must be a string"
-    return ots_result_t(lib.ots_seed_jar_transfer_seed_in(_unwrap(seed), name.encode('utf-8')))
+    return ots_result_t(
+        lib.ots_seed_jar_transfer_seed_in(
+            seed.ptrptr if isinstance(seed, ots_handle_t) else seed,
+            name.encode('utf-8')
+        )
+    )
 
 
 def ots_seed_jar_transfer_seed_out(seed: ots_result_t | _CDataBase) -> ots_result_t:

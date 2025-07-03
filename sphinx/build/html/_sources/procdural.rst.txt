@@ -1,0 +1,5 @@
+Procedural
+==========
+
+.. autofunction:: ots.procedural
+

@@ -4,14 +4,14 @@ from .exceptions import OtsException
 
 class Address:
     """
-    Represents a Monero address.
+    Represents any valid Monero address.
     """
 
     def __init__(self, handle: ots_handle_t):
         """
         Initializes the Monero Address object with a handle.
 
-        :param handle: The handle to the address.
+        :param ots_handle_t handle: The handle to the address. It must be of type HandleType.ADDRESS.
         """
         assert handle.type == HandleType.ADDRESS, "handle must be of type HandleType.ADDRESS"
         self.handle: ots_handle_t = handle
@@ -24,24 +24,38 @@ class Address:
         self._base58: str | None = None
 
     def __str__(self) -> str:
+        """
+        :return: base58 representation of the address.
+        """
         return self.base58
 
     def __repr__(self) -> str:
+        """
+        :meta private:
+        """
         return f"<Address: {self.base58}>"
 
     def __hash__(self):
+        """
+        :meta private:
+        """
         hash(self.handle.ptr)
 
     def __len__(self) -> int:
+        """
+        :return: base58 length of the address.
+        """
         return self.length
 
     def __eq__(self, other: object) -> bool:
         """
         Checks if two Address objects are equal.
 
-        :param other: The other Address object to compare with.
+        :param other: The other Address object to compare with. The other object needs to be either an :py:class:`Address` object or a :py:type:`str`.
+        :type other: Address | str
         :return: True if the addresses are equal, False otherwise.
         """
+        assert isinstance(other, (Address, str)), "other must be an Address object or a string"
         if isinstance(other, str):
             result: ots_result_t = ots_address_equal_string(self.handle, other)
             if ots_is_error(result):
@@ -57,8 +71,6 @@ class Address:
     @property
     def type(self) -> AddressType:
         """
-        Returns the type of the address.
-
         :return: The AddressType of the address.
         """
         if self._type is not None:
@@ -72,8 +84,6 @@ class Address:
     @property
     def network(self) -> Network:
         """
-        Returns the network of the address.
-
         :return: The Network of the address.
         """
         if self._network is not None:
@@ -87,8 +97,6 @@ class Address:
     @property
     def fingerprint(self) -> str:
         """
-        Returns the fingerprint of the address.
-
         :return: The fingerprint of the address.
         """
         if self._fingerprint is not None:
@@ -149,7 +157,7 @@ class Address:
         """
         Returns the length of the address.
 
-        :return: The length of the address.
+        :return: The length of the base58 address.
         """
         if self._length is not None:
             return self._length
@@ -164,7 +172,7 @@ class Address:
         """
         Creates an Address object from a string representation of the address.
 
-        :param address: The string representation of the address.
+        :param str address: The string representation of the address.
         :return: An Address object.
         """
         result: ots_result_t = ots_address_create(address)
@@ -177,7 +185,7 @@ class Address:
         """
         Creates an Address object from an integrated address.
 
-        :param address: The integrated address.
+        :param Address address: The integrated address.
         :return: An Address object.
         """
         assert address.isIntegrated(), "address must be an integrated address"
@@ -192,12 +200,15 @@ class AddressString:
     An helper class for handling Monero address strings,
     without creating an Address object.
 
-    :information: Internally every time in the OTS library
-    and Address object is created from a string, it is for
-    convinience, but instead of using various methods for
-    the same address string, it takes less resources simply
-    creating a Address object with `Address.fromString(address)`
-    and then using its methods directly on the object.
+    .. tip::
+
+        Internally every time in the OTS library
+        and Address object is created from a string, it is for
+        convinience, but instead of using various methods for
+        the same address string, it takes less resources simply
+        creating a Address object with `Address.fromString(address)`
+        and then using its methods directly on the object.
+
     """
 
     @classmethod
@@ -205,7 +216,7 @@ class AddressString:
         """
         Checks if the given address string is a valid Monero address.
 
-        :param address: The address string to validate.
+        :param str address: The address string to validate.
         :return: True if the address is valid, False otherwise.
         """
         result: ots_result_t = ots_address_valid(address)
@@ -218,7 +229,7 @@ class AddressString:
         """
         Returns the network for the given address string.
 
-        :param address: The address string.
+        :param str address: The address string.
         :return: The Network of the address.
         """
         result: ots_result_t = ots_address_string_network(address)
@@ -231,7 +242,7 @@ class AddressString:
         """
         Returns the type of the address for the given address string.
 
-        :param address: The address string.
+        :param str address: The address string.
         :return: The AddressType of the address.
         """
         result: ots_result_t = ots_address_string_type(address)
@@ -244,7 +255,7 @@ class AddressString:
         """
         Returns the fingerprint of the address for the given address string.
 
-        :param address: The address string.
+        :param str address: The address string.
         :return: The fingerprint of the address.
         """
         result: ots_result_t = ots_address_string_fingerprint(address)
@@ -257,7 +268,7 @@ class AddressString:
         """
         Checks if the address string is an integrated address.
 
-        :param address: The address string.
+        :param str address: The address string.
         :return: True if the address is integrated, False otherwise.
         """
         result: ots_result_t = ots_address_string_is_integrated(address)

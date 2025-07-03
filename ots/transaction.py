@@ -8,16 +8,30 @@ class Flow:
     """
     Represents simply a an address and an amount in a Monero transaction/transfer description.
 
-    :information: In the original Monero codebase and cryptonote it is refered to splitted_dsts and
-    change_dts.
+    .. note::
+
+        In the original Monero codebase and cryptonote it is refered to splitted_dsts and change_dts.
     """
 
     def __init__(self, address: Address | str, amount: int):
+        """
+        Initializes a Flow with an address and an amount.
+
+        :param address: The address of the flow, can be a string or an Address object.
+        :type address: Address | str
+        :param int amount: The amount of the flow, a non-negative integer.
+        """
         assert isinstance(address, (Address, str)), "address must be an Address or a string"
         assert isinstance(amount, int), "amount must be an integer"
         assert amount >= 0, "amount must be non-negative"
         self.address: Address = address if isinstance(address, Address) else Address.fromString(address)
+        """
+        The address of the flow, can be a string or an Address object.
+        """
         self.amount: int = amount
+        """
+        The amount of the flow, a non-negative integer.
+        """
 
 
 @dataclass
@@ -28,15 +42,33 @@ class TransferDescription:
     """
 
     amountIn: int = 0
+    """Amount of the input for this transfer."""
     amountOut: int = 0
+    """Amount of the output for this transfer."""
     ringSize: int = 0
-    unlockTime: int = 0
+    """Ring size for the transfer"""
+    unlockTime: int = 0  # TODO: check which version exactly this was removed
+    """
+    Unlock time for the transfer, in blocks.
+    **deprecated**
+
+    .. note::
+
+        Removed in Monero v0.18.4
+
+    """
     flows: list[Flow] = field(default_factory=list)
+    """How many XMR go to which address, in this transfer."""
     change: Flow | None = None
+    """To which address the change goes, if any, and how much."""
     fee: int = 0
+    """Fee for this transfer, in atomic units."""
     paymentId: str | None = None
+    """Payment ID for this transfer, if any."""
     dummyOutputs: int = 0
+    """Number of dummy outputs in this transfer."""
     txExtra: bytes | None = None
+    """Extra data for the transaction, if any."""
 
 
 class TxDescription:
@@ -194,14 +226,18 @@ class TxWarning:
     The reasoning behind was to alert the user about potential issues,
     like unlock time in the future, high transaction fees, or other anomalies.
 
-    Monero removed (IMO) unfortunately the enforcement of unlock time in the
-    meanwhile, other issues are already yield and error/exception, so a warning
-    is there also not needed. And high transacion fees can not really be reasoned
-    on a offline signing device neither (IMO), exept one would set a hard limit.
+    .. note::
 
-    So this class has no fields and no methods and is just a placeholder at the moment.
+        Monero removed (IMO) unfortunately the enforcement of unlock time in the
+        meanwhile, other issues are already yield and error/exception, so a warning
+        is there also not needed. And high transacion fees can not really be reasoned
+        on a offline signing device neither (IMO), exept one would set a hard limit.
 
-    :information: This class is not yet implemented, and may be even removed in future versions of OTS.
+        So this class has no fields and no methods and is just a placeholder at the moment.
+
+    .. warning::
+
+        This class is not yet implemented, and may be even removed in future versions of OTS.
     """
 
     def __init__(self, handle: ots_handle_t):

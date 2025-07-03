@@ -8,32 +8,41 @@ class OtsException(Exception):
     # TODO: maybe it would be better to auto generate for all errors exception classes, check
 
     def __init__(self, error):
+        """
+        Initializes the OtsException with an error struct, from the
+        C ABI ots_result_t struct.
+        :param error: The error struct from the ots_result_t.error
+        :type error: ots_error_t.error
+        """
         self.ptr = error
 
     def __str__(self):
+        """
+        :return: String representation of the error.
+        """
         return self.message()
 
     def __int__(self):
         """
-        Returns the integer value of the error code.
+        :return: Integer value of the error code.
         """
         return self.code()
 
-    def code(self):
+    def code(self) -> int:
         """
-        Returns the code of the error.
+        :return: The code of the error.
         """
         return lib.ots_error_code(self.ptr)
 
-    def error_class(self):
+    def error_class(self) -> str:
         """
-        Returns the class of the error.
+        :return: The class of the error.
         """
         return ffi.string(self.ptr.cls).decode('utf-8')
 
-    def message(self):
+    def message(self) -> str:
         """
-        Returns the message of the error.
+        :return: The message of the error.
         """
         return ffi.string(self.ptr.message).decode('utf-8')
 

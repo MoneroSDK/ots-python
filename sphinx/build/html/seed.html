@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Seeds &#8212; Monero OTS 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=01f34227"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Wallet" href="wallet.html" />
+    <link rel="prev" title="SeedIndices" href="seed_indices.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="seeds">
+<h1>Seeds<a class="headerlink" href="#seeds" title="Link to this heading">¶</a></h1>
+<p>Seed are essentially random bytes that are used to derive keys for the Wallet. In this library, the assumption is that this seeds are generally represented by seed phrases.</p>
+<p>Monero Seeds (<a class="reference internal" href="#ots.seed.MoneroSeed" title="ots.seed.MoneroSeed"><code class="xref py py-class docutils literal notranslate"><span class="pre">ots.seed.MoneroSeed</span></code></a>) are represented by a Monero seed phrase, and an optional passphrase for a seed offset. With this information you can restore the offline Wallet. This seed phrase consists of 24 words of the Monero word list include in the Monero source code. A 25th word is appened as a checksum.</p>
+<p>Legacy Seeds (<a class="reference internal" href="#ots.seed.LegacySeed" title="ots.seed.LegacySeed"><code class="xref py py-class docutils literal notranslate"><span class="pre">ots.seed.LegacySeed</span></code></a>) are essentially Monero Seeds, but they represented by only 12 words (and so only half the entropy). They are used by the legacy Monero Wallets, and can be restored (<a class="reference internal" href="#ots.seed.LegacySeed.decode" title="ots.seed.LegacySeed.decode"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ots.seed.LegacySeed.decode()</span></code></a>) in this library, but can not be created or generated. A 13th word is appened as a checksum. Legacy Seeds are only supported for restoring existing Wallets, and not for creating new ones! This is done on purpose!</p>
+<p>Polyseeds (<a class="reference internal" href="#ots.seed.Polyseed" title="ots.seed.Polyseed"><code class="xref py py-class docutils literal notranslate"><span class="pre">ots.seed.Polyseed</span></code></a>) are a new type of seed that is used to derive keys for the Wallet. They are represented by a seed phrase consisting of 16 words. While Monero Seeds can be generated from the wallets secret bytes, Polyseeds are one way only, once the seed phrase is generated, the Polyseed will derive the key, the coin type (Not only Monero), the estimated creation time, from which the block height is derived. A Polyseed can be converted to a Monro Seed, but not the other way around.</p>
+<p>On creating a new Seed, or decoding(restoring) an exiting seed the related classes (<a class="reference internal" href="#ots.seed.MoneroSeed" title="ots.seed.MoneroSeed"><code class="xref py py-class docutils literal notranslate"><span class="pre">ots.seed.MoneroSeed</span></code></a>, <a class="reference internal" href="#ots.seed.LegacySeed" title="ots.seed.LegacySeed"><code class="xref py py-class docutils literal notranslate"><span class="pre">ots.seed.LegacySeed</span></code></a>, <a class="reference internal" href="#ots.seed.Polyseed" title="ots.seed.Polyseed"><code class="xref py py-class docutils literal notranslate"><span class="pre">ots.seed.Polyseed</span></code></a>) will be used. And return a related object. In the python wrapper seeds out of the seed jar are not objects of the related classes but rather simply Seed <a class="reference internal" href="#ots.seed.Seed" title="ots.seed.Seed"><code class="xref py py-class docutils literal notranslate"><span class="pre">ots.seed.Seed</span></code></a> objects. <a class="reference internal" href="#ots.seed.Seed" title="ots.seed.Seed"><code class="xref py py-class docutils literal notranslate"><span class="pre">ots.seed.Seed</span></code></a> provides all necessary methods and also the properties <a class="reference internal" href="#ots.seed.Seed.type" title="ots.seed.Seed.type"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ots.seed.Seed.type</span></code></a>, returning with <a class="reference internal" href="enums.html#ots.enums.SeedType.MONERO" title="ots.enums.SeedType.MONERO"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ots.enums.SeedType.MONERO</span></code></a> or <a class="reference internal" href="enums.html#ots.enums.SeedType.POLYSEED" title="ots.enums.SeedType.POLYSEED"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ots.enums.SeedType.POLYSEED</span></code></a> depending on the type of the seed. Further through the property <a class="reference internal" href="#ots.seed.Seed.isLegacy" title="ots.seed.Seed.isLegacy"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ots.seed.Seed.isLegacy</span></code></a> it can be checked if the seed is a legacy seed or not on a seed representing a monero seed.</p>
+<p>The seed classes provide methods to encode and decode the seed phrase, encode and decode seed indices (numbers instead of words), and also provide the wallet to execute actions on the wallet like creating addresses, import outputs, export key images, check unsigned transactions, sign transactions and arbitrary data.</p>
+<section id="seed">
+<h2>Seed<a class="headerlink" href="#seed" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ots.seed.Seed">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ots.seed.</span></span><span class="sig-name descname"><span class="pre">Seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="raw.html#ots.raw.ots_handle_t" title="ots.raw.ots_handle_t"><span class="pre">ots_handle_t</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ots.seed.Seed" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Seed class to handle the seed data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.Seed.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ots.seed.Seed.__str__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The fingerprint of the seed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ots.seed.Seed.address">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="address.html#ots.address.Address" title="ots.address.Address"><span class="pre">Address</span></a></em><a class="headerlink" href="#ots.seed.Seed.address" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the standard address of the seed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An Address object representing the seed’s address.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ots.seed.Seed.fingerprint">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fingerprint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#ots.seed.Seed.fingerprint" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the fingerprint of the seed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A last 6 digit upper case hex string from sha256(base58 standard addres) representing the fingerprint of the seed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ots.seed.Seed.height">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">height</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#ots.seed.Seed.height" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the height of the seed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An integer representing the height of the seed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.Seed.indices">
+<span class="sig-name descname"><span class="pre">indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="seed_indices.html#ots.seed_indices.SeedIndices" title="ots.seed_indices.SeedIndices"><span class="pre">SeedIndices</span></a></span></span><a class="headerlink" href="#ots.seed.Seed.indices" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the seed indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>password</strong> – Optional password to decrypt the seed indices. Not supported for legacy seeds.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A SeedIndices object containing the seed indices.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ots.seed.Seed.isLegacy">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">isLegacy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#ots.seed.Seed.isLegacy" title="Link to this definition">¶</a></dt>
+<dd><p>Checks if the seed is a legacy seed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the seed is a legacy seed, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ots.seed.Seed.network">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">network</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></em><a class="headerlink" href="#ots.seed.Seed.network" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the network of the seed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A Network enum representing the network of the seed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.Seed.phrase">
+<span class="sig-name descname"><span class="pre">phrase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="seed_language.html#ots.seed_language.SeedLanguage" title="ots.seed_language.SeedLanguage"><span class="pre">SeedLanguage</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="wipeable_string.html#ots.wipeable_string.WipeableString" title="ots.wipeable_string.WipeableString"><span class="pre">WipeableString</span></a></span></span><a class="headerlink" href="#ots.seed.Seed.phrase" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the seed phrase in the specified language.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>language</strong> – The language of the seed phrase.</p></li>
+<li><p><strong>password</strong> – Optional password to encrypt the seed phrase. Not supported for legacy seeds. Works different on Monero Seeds and Polyseeds. While on Monero Seeds the password is the offset passphrase, on a Polyseed it is the actual password. Polyseed also support passphrase offset, but needs to be set on creating the Polyseed and decoding the polyseed. While on the Monero Seed password (offset passphrase in this case) is substracted on generating the seed phrase, before generating the seed phrase.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A WipeableString containing the seed phrase.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ots.seed.Seed.time">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime</span></em><a class="headerlink" href="#ots.seed.Seed.time" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the time of the seed as a datetime object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A datetime object representing the time of the seed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ots.seed.Seed.timestamp">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#ots.seed.Seed.timestamp" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the timestamp of the seed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An integer representing the timestamp of the seed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ots.seed.Seed.type">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="enums.html#ots.enums.SeedType" title="ots.enums.SeedType"><span class="pre">SeedType</span></a></em><a class="headerlink" href="#ots.seed.Seed.type" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The type of the seed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ots.seed.Seed.wallet">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wallet</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="wallet.html#ots.wallet.Wallet" title="ots.wallet.Wallet"><span class="pre">Wallet</span></a></em><a class="headerlink" href="#ots.seed.Seed.wallet" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the wallet associated with the seed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A Wallet object representing the seed’s wallet.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="legacyseed">
+<h2>LegacySeed<a class="headerlink" href="#legacyseed" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ots.seed.LegacySeed">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ots.seed.</span></span><span class="sig-name descname"><span class="pre">LegacySeed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="raw.html#ots.raw.ots_handle_t" title="ots.raw.ots_handle_t"><span class="pre">ots_handle_t</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ots.seed.LegacySeed" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ots.seed.Seed" title="ots.seed.Seed"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seed</span></code></a></p>
+<p>LegacySeed class to handle Monero 12/13 word legacy seeds.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.LegacySeed.decode">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.LegacySeed" title="ots.seed.LegacySeed"><span class="pre">LegacySeed</span></a></span></span><a class="headerlink" href="#ots.seed.LegacySeed.decode" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes a legacy seed phrase into a LegacySeed object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phrase</strong> – The seed phrase to decode.</p></li>
+<li><p><strong>height</strong> – The block height associated with the seed.</p></li>
+<li><p><strong>time</strong> – The timestamp associated with the seed.</p></li>
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A LegacySeed object containing the decoded seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.LegacySeed.decodeIndices">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decodeIndices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="seed_indices.html#ots.seed_indices.SeedIndices" title="ots.seed_indices.SeedIndices"><span class="pre">SeedIndices</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.LegacySeed" title="ots.seed.LegacySeed"><span class="pre">LegacySeed</span></a></span></span><a class="headerlink" href="#ots.seed.LegacySeed.decodeIndices" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes seed indices into a LegacySeed object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indices</strong> – The SeedIndices object to decode.</p></li>
+<li><p><strong>height</strong> – The block height associated with the seed.</p></li>
+<li><p><strong>time</strong> – The timestamp associated with the seed.</p></li>
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A LegacySeed object containing the decoded seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="moneroseed">
+<h2>MoneroSeed<a class="headerlink" href="#moneroseed" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ots.seed.MoneroSeed">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ots.seed.</span></span><span class="sig-name descname"><span class="pre">MoneroSeed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="raw.html#ots.raw.ots_handle_t" title="ots.raw.ots_handle_t"><span class="pre">ots_handle_t</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ots.seed.MoneroSeed" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ots.seed.Seed" title="ots.seed.Seed"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seed</span></code></a></p>
+<p>MoneroSeed class to handle Monero 24/25 word seeds.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.MoneroSeed.create">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">random</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.MoneroSeed" title="ots.seed.MoneroSeed"><span class="pre">MoneroSeed</span></a></span></span><a class="headerlink" href="#ots.seed.MoneroSeed.create" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a new MoneroSeed instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>random</strong> – 32 bytes of random data to create the seed.</p></li>
+<li><p><strong>height</strong> – The block height associated with the seed.</p></li>
+<li><p><strong>time</strong> – The timestamp associated with the seed.</p></li>
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A MoneroSeed object containing the created seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.MoneroSeed.decode">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passphrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.MoneroSeed" title="ots.seed.MoneroSeed"><span class="pre">MoneroSeed</span></a></span></span><a class="headerlink" href="#ots.seed.MoneroSeed.decode" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes a Monero seed phrase into a MoneroSeed object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phrase</strong> – The seed phrase to decode.</p></li>
+<li><p><strong>height</strong> – The block height associated with the seed.</p></li>
+<li><p><strong>time</strong> – The timestamp associated with the seed.</p></li>
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+<li><p><strong>passphrase</strong> – Optional passphrase for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A MoneroSeed object containing the decoded seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.MoneroSeed.decodeIndices">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decodeIndices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="seed_indices.html#ots.seed_indices.SeedIndices" title="ots.seed_indices.SeedIndices"><span class="pre">SeedIndices</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passphrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.MoneroSeed" title="ots.seed.MoneroSeed"><span class="pre">MoneroSeed</span></a></span></span><a class="headerlink" href="#ots.seed.MoneroSeed.decodeIndices" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes seed indices into a MoneroSeed object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indices</strong> – The SeedIndices object to decode.</p></li>
+<li><p><strong>height</strong> – The block height associated with the seed.</p></li>
+<li><p><strong>time</strong> – The timestamp associated with the seed.</p></li>
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+<li><p><strong>passphrase</strong> – Optional passphrase for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A MoneroSeed object containing the decoded seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.MoneroSeed.generate">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.MoneroSeed" title="ots.seed.MoneroSeed"><span class="pre">MoneroSeed</span></a></span></span><a class="headerlink" href="#ots.seed.MoneroSeed.generate" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a new MoneroSeed instance with random data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>height</strong> – The block height associated with the seed.</p></li>
+<li><p><strong>time</strong> – The timestamp associated with the seed.</p></li>
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A MoneroSeed object containing the generated seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="polyseed">
+<h2>Polyseed<a class="headerlink" href="#polyseed" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="ots.seed.Polyseed">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ots.seed.</span></span><span class="sig-name descname"><span class="pre">Polyseed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="raw.html#ots.raw.ots_handle_t" title="ots.raw.ots_handle_t"><span class="pre">ots_handle_t</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ots.seed.Polyseed" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ots.seed.Seed" title="ots.seed.Seed"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seed</span></code></a></p>
+<p>Polyseed class to handle Polyseed (16 word) seeds,
+with timestamp and encryption support included.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.Polyseed.create">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">random</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passphrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.Polyseed" title="ots.seed.Polyseed"><span class="pre">Polyseed</span></a></span></span><a class="headerlink" href="#ots.seed.Polyseed.create" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a new Polyseed instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>random</strong> – 19 bytes of random data to create the seed.</p></li>
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+<li><p><strong>time</strong> – The timestamp associated with the seed.</p></li>
+<li><p><strong>passphrase</strong> – Optional passphrase for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Polyseed object containing the created seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.Polyseed.decode">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passphrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.Polyseed" title="ots.seed.Polyseed"><span class="pre">Polyseed</span></a></span></span><a class="headerlink" href="#ots.seed.Polyseed.decode" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes a Polyseed phrase into a Polyseed object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phrase</strong> – The seed phrase to decode.</p></li>
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+<li><p><strong>password</strong> – Optional password to decrypt the seed. Not supported for legacy seeds.</p></li>
+<li><p><strong>passphrase</strong> – Optional passphrase for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Polyseed object containing the decoded seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.Polyseed.decodeIndices">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decodeIndices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="seed_indices.html#ots.seed_indices.SeedIndices" title="ots.seed_indices.SeedIndices"><span class="pre">SeedIndices</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passphrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.Polyseed" title="ots.seed.Polyseed"><span class="pre">Polyseed</span></a></span></span><a class="headerlink" href="#ots.seed.Polyseed.decodeIndices" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes seed indices into a Polyseed object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indices</strong> – The SeedIndices object to decode.</p></li>
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+<li><p><strong>password</strong> – Optional password to decrypt the seed. Not supported for legacy seeds.</p></li>
+<li><p><strong>passphrase</strong> – Optional passphrase for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Polyseed object containing the decoded seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.Polyseed.decodeWithLanguage">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decodeWithLanguage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="seed_language.html#ots.seed_language.SeedLanguage" title="ots.seed_language.SeedLanguage"><span class="pre">SeedLanguage</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passphrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.Polyseed" title="ots.seed.Polyseed"><span class="pre">Polyseed</span></a></span></span><a class="headerlink" href="#ots.seed.Polyseed.decodeWithLanguage" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes a Polyseed phrase with a specific language into a Polyseed object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phrase</strong> – The seed phrase to decode.</p></li>
+<li><p><strong>language</strong> – The language of the seed phrase.</p></li>
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+<li><p><strong>password</strong> – Optional password to decrypt the seed. Not supported for legacy seeds.</p></li>
+<li><p><strong>passphrase</strong> – Optional passphrase for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Polyseed object containing the decoded seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.Polyseed.decodeWithLanguageCode">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decodeWithLanguageCode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">languageCode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passphrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.Polyseed" title="ots.seed.Polyseed"><span class="pre">Polyseed</span></a></span></span><a class="headerlink" href="#ots.seed.Polyseed.decodeWithLanguageCode" title="Link to this definition">¶</a></dt>
+<dd><p>Decodes a Polyseed phrase with a specific language code into a Polyseed object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phrase</strong> – The seed phrase to decode.</p></li>
+<li><p><strong>languageCode</strong> – The language code of the seed phrase.</p></li>
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+<li><p><strong>password</strong> – Optional password to decrypt the seed. Not supported for legacy seeds.</p></li>
+<li><p><strong>passphrase</strong> – Optional passphrase for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Polyseed object containing the decoded seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ots.seed.Polyseed.generate">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="enums.html#ots.enums.Network" title="ots.enums.Network"><span class="pre">Network</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">Network.MAIN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passphrase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ots.seed.Polyseed" title="ots.seed.Polyseed"><span class="pre">Polyseed</span></a></span></span><a class="headerlink" href="#ots.seed.Polyseed.generate" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a new Polyseed instance with random data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>network</strong> – The network type for the seed.</p></li>
+<li><p><strong>time</strong> – The timestamp associated with the seed.</p></li>
+<li><p><strong>passphrase</strong> – Optional passphrase for the seed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Polyseed object containing the generated seed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Monero OTS</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="classes.html">Object oriented</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedural.html">Procedural</a></li>
+<li class="toctree-l1"><a class="reference internal" href="raw.html">Raw usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="constants.html">Constants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="enums.html">Enumerations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Installation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="classes.html">Classes</a><ul>
+      <li>Previous: <a href="seed_indices.html" title="previous chapter">SeedIndices</a></li>
+      <li>Next: <a href="wallet.html" title="next chapter">Wallet</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, DiosDelRayo.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/seed.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
