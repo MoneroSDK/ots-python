@@ -150,7 +150,7 @@ def _unwrap(
     :return: The C data type representation of the value.
     """
     assert isinstance(value, (_CDataBase, ots_result_t, ots_handle_t)), "value must be an instance of _CDataBase, ots_result_t or ots_handle_t"
-    assert instance(value, (ots_result_t, ots_handle_t)) or ffi.typeof(value) in (ffi.typeof('ots_result_t *'), ffi.typeof('ots_handle_t *')), "value must be of type ots_result_t * or ots_handle_t *"
+    assert isinstance(value, (ots_result_t, ots_handle_t)) or ffi.typeof(value) in (ffi.typeof('ots_result_t *'), ffi.typeof('ots_handle_t *')), "value must be of type ots_result_t * or ots_handle_t *"
     if isinstance(value, _opaque_handle_t):
         return value.ptr
     return value
@@ -1970,21 +1970,21 @@ def ots_result_seed_type_is_type(
         is_type: bool = ots_result_seed_type_is_type(result, SeedType.MONERO)
 
     :param result: The result to check.
+    :type result: ots_result_t | _CDataBase
     :param type: The expected type of the seed.
+    :type type: SeedType | int
     :return: True if the seed is of the specified type, False otherwise.
     """
     assert isinstance(type, SeedType) or isinstance(type, int), "type must be an instance of OTS_SEED_TYPE or an integer"
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     return lib.ots_result_seed_type_is_type(_unwrap(result), int(type))
 
-# TODO: continue here with the rest of the documentation
 
 def ots_free_string(string: _CDataBase) -> None:
     """
     Frees a string allocated by OTS functions.
 
-    :param str: The null terminated string to free.
-    :return: None
+    :param _CDataBase string: The null terminated string to free.
     """
     assert isinstance(string, _CDataBase) and ffi.typeof(string) == ffi.typeof('char**'), "string must be a char**"
     lib.ots_free_string(ffi.cast('char**', string))
@@ -1994,9 +1994,8 @@ def ots_free_binary_string(string: _CDataBase, size: int) -> None:
     """
     Frees a binary string allocated by OTS functions.
 
-    :param str: The binary string to free.
-    :param size: The size of the binary string.
-    :return: None
+    :param _CDataBase string: The binary string to free.
+    :param int size: The size of the binary string.
     """
     assert isinstance(string, _CDataBase) and ffi.typeof(string) == ffi.typeof('char**'), "string must be a char**"
     lib.ots_free_binary_string(ffi.cast('char**', string), size)
@@ -2006,10 +2005,9 @@ def ots_free_array(arr: _CDataBase, elem_size: int, count: int) -> None:
     """
     Frees an array allocated by OTS functions.
 
-    :param arr: The array to free.
-    :param elem_size: The size of each element in the array.
-    :param count: The number of elements in the array.
-    :return: None
+    :param _CDataBase arr: The array to free.
+    :param int elem_size: The size of each element in the array.
+    :param int count: The number of elements in the array.
     """
     assert isinstance(arr, _CDataBase) and ffi.typeof(arr).cname.endswith('* *'), "arr must be a pointer to a pointer (void**)"
     lib.ots_free_array(ffi.cast('void**', arr), elem_size, count)
@@ -2019,10 +2017,13 @@ def ots_free_result(result: ots_result_t | _CDataBase) -> None:
     """
     Frees the result object returned by OTS functions.
     :param result: The result to free.
-    :return: None
+    :type result: ots_result_t | _CDataBase
 
-    :warning:   Use `del result` instead of this function in Python if
-                you are using it on a ots_result_t, to clean up all.
+    .. warning::
+
+        Use `del result` instead of this function in Python if
+        you are using it on a ots_result_t, to clean up all.
+
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     if isinstance(result, _CDataBase):
@@ -2037,10 +2038,13 @@ def ots_free_handle(handle: ots_handle_t | _CDataBase) -> None:
     Frees the handle object returned by OTS functions.
 
     :param handle: The handle to free.
-    :return: None
+    :type handle: ots_handle_t | _CDataBase
 
-    :warning:   Use `del handle` instead of this function in Python if
-                you are using it on a ots_handle_t, to clean up all.
+    .. warning::
+
+        Use `del handle` instead of this function in Python if
+        you are using it on a ots_handle_t, to clean up all.
+
     """
     assert isinstance(handle, ots_handle_t) or isinstance(handle, _CDataBase), "handle must be an instance of ots_handle_t or _CDataBase"
     if isinstance(handle, _CDataBase):
@@ -2051,6 +2055,9 @@ def ots_free_handle(handle: ots_handle_t | _CDataBase) -> None:
 
 
 def ots_free_handle_object(handle: _CDataBase) -> None:
+    """
+    :meta private:
+    """
     raise NotImplementedError('Only internal use, do not use this function directly.')
 
 
@@ -2059,7 +2066,7 @@ def ots_free_tx_description(tx_description: ots_tx_description_t | _CDataBase) -
     Frees the transaction description object returned by OTS functions.
 
     :param tx_description: The transaction description to free.
-    :return: None
+    :type tx_description: ots_tx_description_t | _CDataBase
     """
     assert isinstance(tx_description, tx_description_t) or isinstance(tx_description, _CDataBase), "tx_description must be an instance of ots_tx_description_t or _CDataBase"
     if isinstance(tx_description, _CDataBase):
@@ -2073,9 +2080,8 @@ def ots_secure_free(buffer: _CDataBase, size: int) -> None:
     """
     Securely frees a buffer by overwriting its contents before deallocation.
 
-    :param buffer: The buffer to free.
-    :param size: The size of the buffer.
-    :return: None
+    :param _CDataBase buffer: The buffer to free.
+    :param int size: The size of the buffer.
     """
     assert isinstance(buffer, _CDataBase) and ffi.typeof(buffer).cname.endswith('* *'), "buffer must be a pointer to a pointer (void**)"
     lib.ots_secure_free(ffi.cast('void**', buffer), size)
@@ -2085,7 +2091,14 @@ def ots_wipeable_string_create(string: str) -> ots_result_t:
     """
     Creates a wipeable string from a regular string.
 
-    :param string: The string to create a wipeable string from.
+    .. code-block:: python
+
+        my_string = "my wipeable string"
+        result: ots_result_t = ots_wipeable_string_create(my_string)
+        ws: ots_handle_t = ots_result_handle(result)
+        ots_wipeable_string_c_str(ws) == my_string
+
+    :param str string: The string to create a wipeable string from.
     :return: ots_result_t containing the created wipeable string.
     """
     assert isinstance(string, str), "string must be a str"
@@ -2099,8 +2112,19 @@ def ots_wipeable_string_compare(
     """
     Compares two wipeable strings.
 
+    .. code-block:: python
+
+        str1: ots_handle_t = ots_wipeable_string_create("aaa")
+        str2: ots_handle_t = ots_wipeable_string_create("bbb")
+        result: ots_result_t = ots_wipeable_string_compare(str1, str2)
+        assert ots_result_is_comparison(result)
+        assert ots_result_comparison(result) < 0  # str1 is less than str2
+        assert ots_result_is_equal(result) is False  # str1 is not equal to str2
+
     :param str1: The first string to compare.
+    :type str1: ots_handle_t | _CDataBase
     :param str2: The second string to compare.
+    :type str2: ots_handle_t | _CDataBase
     :return: ots_result_t indicating the comparison result.
     """
     assert isinstance(str1, (ots_handle_t, _CDataBase)) and HandleType(_unwrap(str1).type) == HandleType.WIPEABLE_STRING, "str1 must be an instance of ots_handle_t or _CDataBase and of type HandleType.WIPEABLE_STRING"
@@ -2112,8 +2136,16 @@ def ots_wipeable_string_c_str(string: ots_handle_t | _CDataBase) -> str:
     """
     Returns the C-style string representation of a wipeable string.
 
+    .. code-block:: python
+
+        my_string = "my wipeable string"
+        result: ots_result_t = ots_wipeable_string_create(my_string)
+        ws: ots_handle_t = ots_result_handle(result)
+        assert ots_wipeable_string_c_str(ws) == my_string
+
     :param string: The wipeable string to convert.
-    :return: The C-style string representation.
+    :type string: ots_handle_t | _CDataBase
+    :return: The string representation.
     """
     assert isinstance(string, (ots_handle_t, _CDataBase)), "string must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(string).type) == HandleType.WIPEABLE_STRING, "string must be of type HandleType.WIPEABLE_STRING"
@@ -2124,7 +2156,14 @@ def ots_seed_indices_create(indices: list[int]) -> ots_result_t:
     """
     Creates a seed indices object from a list of integers.
 
-    :param indices: A list of integers representing the seed indices.
+    .. code-block:: python
+
+        indices = [1, 2, 3, 4]
+        result: ots_result_t = ots_seed_indices_create(indices)
+        si: ots_handle_t = ots_result_handle(result)
+        assert ots_seed_indices_values(si) == indices
+
+    :param list[int] indices: A list of integers representing the seed indices.
     :return: ots_result_t containing the created seed indices object.
     """
     assert isinstance(indices, list) and all(isinstance(i, int) for i in indices), "indices must be a list of integers"
@@ -2139,8 +2178,22 @@ def ots_seed_indices_create_from_string(
     """
     Creates a seed indices object from a string representation of indices.
 
-    :param string: A string containing the indices separated by the specified separator.
-    :param separator: The separator used in the string (default is an empty string).
+    .. code-block:: python
+
+        indices_string = "0001000200030004"
+        result: ots_result_t = ots_seed_indices_create_from_string(indices_string)
+        si: ots_handle_t = ots_result_handle(result)
+        assert ots_seed_indices_values(si) == [1, 2, 3, 4]
+
+        # or
+
+        indices_string = "0001, 0002, 0003, 0004"
+        result: ots_result_t = ots_seed_indices_create_from_string(indices_string, separator=', ')
+        si: ots_handle_t = ots_result_handle(result)
+        assert ots_seed_indices_values(si) == [1, 2, 3, 4]
+
+    :param str string: A string containing the indices separated by the specified separator.
+    :param str separator: The separator used in the string (default is an empty string).
     :return: ots_result_t containing the created seed indices object.
     """
     assert isinstance(string, str), "string must be a str"
@@ -2160,8 +2213,22 @@ def ots_seed_indices_create_from_hex(
     """
     Creates a seed indices object from a hexadecimal string representation of indices.
 
-    :param hex: A hexadecimal string containing the indices separated by the specified separator.
-    :param separator: The separator used in the string (default is a comma).
+    .. code-block:: python
+
+        hex_string = "0B10B20B30B4"
+        result: ots_result_t = ots_seed_indices_create_from_hex(hex_string)
+        si: ots_handle_t = ots_result_handle(result)
+        assert ots_seed_indices_values(si) == [177, 178, 179, 180]
+
+        # or
+
+        hex_string = "0B1|0B2|0B3|0B4"
+        result: ots_result_t = ots_seed_indices_create_from_hex(hex_string, separator='|')
+        si: ots_handle_t = ots_result_handle(result)
+        assert ots_seed_indices_values(si) == [177, 178, 179, 180]
+
+    :param str hex: A hexadecimal string containing the indices separated by the specified separator.
+    :param str separator: The separator used in the string (default is a comma).
     :return: ots_result_t containing the created seed indices object.
     """
     assert isinstance(hex, str), "hex must be a str"
@@ -2178,7 +2245,15 @@ def ots_seed_indices_values(handle: ots_handle_t | _CDataBase) -> list[int]:
     """
     Returns the values of the seed indices as a list of integers.
 
+    .. code-block:: python
+
+        indices: list[int] = [1, 2, 3, 4]
+        result: ots_result_t = ots_seed_indices_create(indices)
+        si: ots_handle_t = ots_result_handle(result)
+        assert ots_seed_indices_values(si) == indices
+
     :param handle: The handle containing the seed indices.
+    :type handle: ots_handle_t | _CDataBase
     :return: A list of integers representing the seed indices.
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
@@ -2198,6 +2273,14 @@ def ots_seed_indices_count(handle: ots_handle_t | _CDataBase) -> int:
     """
     Returns the count of seed indices in the handle.
 
+    .. code-block:: python
+
+        indices: list[int] = [1, 2, 3, 4]
+        result: ots_result_t = ots_seed_indices_create(indices)
+        si: ots_handle_t = ots_result_handle(result)
+        count: int = ots_seed_indices_count(si)
+        assert count == len(indices)
+
     :param handle: The handle containing the seed indices.
     :return: The count of seed indices as an integer.
     """
@@ -2210,8 +2293,21 @@ def ots_seed_indices_clear(handle: ots_handle_t | _CDataBase) -> None:
     """
     Clears the seed indices in the handle.
 
+    .. code-block:: python
+
+        indices: list[int] = [1, 2, 3, 4]
+        result: ots_result_t = ots_seed_indices_create(indices)
+        si: ots_handle_t = ots_result_handle(result)
+        assert ots_seed_indices_count(si) == len(indices)
+        ots_seed_indices_clear(si)
+        assert ots_seed_indices_count(si) == 0
+
+    .. note::
+
+        Clear not only clears the indices but also securely wipes the memory used by the indices.
+
     :param handle: The handle containing the seed indices to clear.
-    :return: None
+    :type handle: ots_handle_t | _CDataBase
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(handle).type) == HandleType.SEED_INDICES, "handle must be of type HandleType.SEED_INDICES"
@@ -2225,13 +2321,22 @@ def ots_seed_indices_append(
     """
     Appends a value to the seed indices in the handle.
 
+    .. code-block:: python
+
+        indices: list[int] = [1, 2, 3]
+        result: ots_result_t = ots_seed_indices_create(indices)
+        si: ots_handle_t = ots_result_handle(result)
+        ots_seed_indices_append(si, 4)
+        assert ots_seed_indices_values(si) == [1, 2, 3, 4]
+
     :param handle: The handle containing the seed indices.
-    :param value: The value to append to the seed indices.
-    :return: None
+    :type handle: ots_handle_t | _CDataBase
+    :param int value: The uint16 value to append to the seed indices.
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(handle).type) == HandleType.SEED_INDICES, "handle must be of type HandleType.SEED_INDICES"
     assert isinstance(value, int), "value must be an integer"
+    assert value >= 0, "value must be a non-negative integer"
     lib.ots_seed_indices_append(_unwrap(handle), value)
 
 
@@ -2242,8 +2347,17 @@ def ots_seed_indices_numeric(
     """
     Returns a string representation of the seed indices in numeric format.
 
+    .. code-block:: python
+
+        indices: list[int] = [1, 2, 3, 4]
+        result: ots_result_t = ots_seed_indices_create(indices)
+        si: ots_handle_t = ots_result_handle(result)
+        numeric_string: str = ots_seed_indices_numeric(si, separator=', ')
+        assert numeric_string == '1, 2, 3, 4'
+
     :param handle: The handle containing the seed indices.
-    :param separator: The separator to use between indices (default is an empty string).
+    :type handle: ots_handle_t | _CDataBase
+    :param str separator: The separator to use between indices (default is an empty string).
     :return: A string representing the seed indices in numeric format.
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
@@ -2258,8 +2372,17 @@ def ots_seed_indices_hex(
     """
     Returns a string representation of the seed indices in hexadecimal format.
 
+    .. code-block:: python
+
+        indices: list[int] = [177, 178, 179, 180]
+        result: ots_result_t = ots_seed_indices_create(indices)
+        si: ots_handle_t = ots_result_handle(result)
+        hex_string: str = ots_seed_indices_hex(si, separator=':')
+        assert hex_string == '0B1:0B2:0B3:0B4'
+
     :param handle: The handle containing the seed indices.
-    :param separator: The separator to use between indices (default is a comma).
+    :type handle: ots_handle_t | _CDataBase
+    :param str separator: The separator to use between indices (default is a comma).
     :return: A string representing the seed indices in hexadecimal format.
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
@@ -2271,6 +2394,11 @@ def ots_seed_languages() -> ots_result_t:
     """
     Returns a list of all available seed languages.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_languages()
+        languages: list[ots_handle_t] = ots_result_handle_array_reference(result)
+
     :return: ots_result_t containing the list of seed languages.
     """
     return ots_result_t(lib.ots_seed_languages())
@@ -2279,6 +2407,11 @@ def ots_seed_languages() -> ots_result_t:
 def ots_seed_languages_for_type(type: SeedType | int) -> ots_result_t:
     """
     Returns a list of seed languages for a specific seed type.
+
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_languages_for_type(SeedType.MONERO)
+        languages: list[ots_handle_t] = ots_result_handle_array_reference(result)
 
     :param type: The seed type for which to get the languages.
     :return: ots_result_t containing the list of seed languages for the specified type.
@@ -2291,8 +2424,26 @@ def ots_seed_language_default(type: SeedType | int) -> ots_result_t:
     """
     Returns the default seed language for a specific seed type.
 
+    .. attention::
+
+        The default language for any seed is intentionally not set.
+        To use this function, you must first set a default language for the seed type
+        using :py:func:`ots_seed_language_set_default` before questioning it.
+
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_code('en')
+        en: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_set_default(SeedType.MONERO, en)
+        result = ots_seed_language_default(SeedType.MONERO)
+        default_language: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_equals(default_language, en)
+        assert ots_result_bool(result) is True  # default language is now set to 'en'
+
     :param type: The seed type for which to get the default language.
+    :type type: SeedType | int
     :return: ots_result_t containing the default seed language for the specified type.
+    :raise: An error if the default language is not set for the seed type.
     """
     assert isinstance(type, SeedType) or isinstance(type, int), "type must be an instance of SeedType or an integer"
     return ots_result_t(lib.ots_seed_language_default(int(type)))
@@ -2305,8 +2456,19 @@ def ots_seed_language_set_default(
     """
     Sets the default seed language for a specific seed type.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_code('en')
+        en: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_set_default(SeedType.MONERO, en)
+        default: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_equals(default, en)
+        assert ots_result_bool(result) is True  # default language is now set to 'en'
+
     :param type: The seed type for which to set the default language.
+    :type type: SeedType | int
     :param language: The handle of the language to set as default.
+    :type language: ots_handle_t | _CDataBase
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(type, SeedType) or isinstance(type, int), "type must be an instance of SeedType or an integer"
@@ -2319,7 +2481,14 @@ def ots_seed_language_from_code(code: str) -> ots_result_t:
     """
     Returns a seed language from its code.
 
-    :param code: The code of the seed language.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_code('en')
+        en: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_code(en)
+        assert ots_result_string(result) == 'en'  # en is the code for English
+
+    :param str code: The code of the seed language.
     :return: ots_result_t containing the seed language corresponding to the given code.
     """
     assert isinstance(code, str), "code must be a string"
@@ -2330,7 +2499,14 @@ def ots_seed_language_from_name(name: str) -> ots_result_t:
     """
     Returns a seed language from its name.
 
-    :param name: The name of the seed language.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_name('Deutsch')
+        de: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_code(de)
+        assert ots_result_string(result) == 'de'  # de is the code for German
+
+    :param str name: The name of the seed language.
     :return: ots_result_t containing the seed language corresponding to the given name.
     """
     assert isinstance(name, str), "name must be a string"
@@ -2341,7 +2517,14 @@ def ots_seed_language_from_english_name(name: str) -> ots_result_t:
     """
     Returns a seed language from its English name.
 
-    :param name: The English name of the seed language.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_english_name('Russian')
+        ru: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_code(ru)
+        assert ots_result_string(result) == 'ru'  # ru is the code for Russian
+
+    :param str name: The English name of the seed language.
     :return: ots_result_t containing the seed language corresponding to the given English name.
     """
     assert isinstance(name, str), "name must be a string"
@@ -2352,7 +2535,15 @@ def ots_seed_language_code(language: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the code of the seed language.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_code('en')
+        en: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_code(en)
+        assert ots_result_string(result) == 'en'  # en is the code for English
+
     :param language: The handle of the seed language.
+    :type language: ots_handle_t | _CDataBase
     :return: ots_result_t containing the code of the seed language.
     """
     assert isinstance(language, (ots_handle_t, _CDataBase)), "language must be an instance of ots_handle_t or _CDataBase"
@@ -2364,7 +2555,15 @@ def ots_seed_language_name(language: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the name of the seed language.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_code('de')
+        de: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_name(de)
+        assert ots_result_string(result) == 'Deutsch'
+
     :param language: The handle of the seed language.
+    :type language: ots_handle_t | _CDataBase
     :return: ots_result_t containing the name of the seed language.
     """
     assert isinstance(language, (ots_handle_t, _CDataBase)), "language must be an instance of ots_handle_t or _CDataBase"
@@ -2376,7 +2575,14 @@ def ots_seed_language_english_name(language: ots_handle_t | _CDataBase) -> ots_r
     """
     Returns the English name of the seed language.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_code('de')
+        de: ots_handle_t = ots_result_handle(result)
+        assert ots_seed_language_english_name(de) == 'German'
+
     :param language: The handle of the seed language.
+    :type language: ots_handle_t | _CDataBase
     :return: ots_result_t containing the English name of the seed language.
     """
     assert isinstance(language, (ots_handle_t, _CDataBase)), "language must be an instance of ots_handle_t or _CDataBase"
@@ -2391,8 +2597,19 @@ def ots_seed_language_supported(
     """
     Checks if a seed language is supported for a specific seed type.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_code('en')
+        en: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_supported(en, SeedType.MONERO)
+        assert ots_result_boolean(result) is True  # en is supported for MONERO
+        result = ots_seed_language_supported(en, SeedType.POLYSEED)
+        assert ots_result_boolean(result) is True  # en is supported for POLYSEED
+
     :param language: The handle of the seed language.
+    :type language: ots_handle_t | _CDataBase
     :param type: The seed type to check support for.
+    :type type: SeedType | int
     :return: ots_result_t indicating whether the language is supported for the specified seed type.
     """
     assert isinstance(language, (ots_handle_t, _CDataBase)), "language must be an instance of ots_handle_t or _CDataBase"
@@ -2407,6 +2624,16 @@ def ots_seed_language_is_default(
 ) -> ots_result_t:
     """
     Checks if a seed language is the default for a specific seed type.
+
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_code('en')
+        en: ots_handle_t = ots_result_handle(result)
+        ots_seed_language_set_default(SeedType.MONERO, en)
+        result = ots_seed_language_is_default(en, SeedType.MONERO)
+        assert ots_result_boolean(result) is True  # en is the default for MONERO
+        result = ots_seed_language_is_default(en, SeedType.POLYSEED)
+        assert ots_result_boolean(result) is False  # en is not the default for POLYSEED
 
     :param language: The handle of the seed language.
     :param type: The seed type to check if the language is default for.
@@ -2425,8 +2652,19 @@ def ots_seed_language_equals(
     """
     Checks if two seed languages are equal.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_code('en')
+        en1: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_from_english_name('English')
+        en2: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_equals(en1, en2)
+        assert ots_result_boolean(result) is True  # en1 and en2 are equal
+
     :param language1: The first seed language to compare.
+    :type language1: ots_handle_t | _CDataBase
     :param language2: The second seed language to compare.
+    :type language2: ots_handle_t | _CDataBase
     :return: ots_result_t indicating whether the two languages are equal.
     """
     assert isinstance(language1, (ots_handle_t, _CDataBase)), "language1 must be an instance of ots_handle_t or _CDataBase"
@@ -2443,8 +2681,16 @@ def ots_seed_language_equals_code(
     """
     Checks if a seed language equals a specific code.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_language_from_code('en')
+        en: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_equals_code(en, 'en')
+        assert ots_result_boolean(result) is True  # en equals 'en'
+
     :param language: The handle of the seed language to compare.
-    :param code: The code to compare against.
+    :type language: ots_handle_t | _CDataBase
+    :param str code: The code to compare against.
     :return: ots_result_t indicating whether the language equals the specified code.
     """
     assert isinstance(language, (ots_handle_t, _CDataBase)), "language must be an instance of ots_handle_t or _CDataBase"
@@ -2461,9 +2707,23 @@ def ots_seed_phrase(
     """
     Returns the seed phrase for a given seed and language.
 
+    ... code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_language_from_code('en')
+        en: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_phrase(seed, en, 'my_password')
+        assert ots_result_is_wipeable_string(result) is True
+        phrase: ots_handle_t = ots_result_handle(result)
+        assert len(ots_wipeable_string_c_str(phrase).split(' ')) == 25  # Monero seed phrases are 25 words long
+
     :param seed: The handle of the seed.
+    :type seed: ots_handle_t | _CDataBase
     :param language: The handle of the seed language.
+    :type language: ots_handle_t | _CDataBase
     :param password: The password to use for generating the seed phrase.
+    :type password: str
     :return: ots_result_t containing the seed phrase.
     """
     assert isinstance(seed, (ots_handle_t, _CDataBase)), "seed must be an instance of ots_handle_t or _CDataBase"
@@ -2482,9 +2742,19 @@ def ots_seed_phrase_for_language_code(
     """
     Returns the seed phrase for a given seed and language code.
 
+    ... code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_phrase(seed, 'en', 'my_password')
+        assert ots_result_is_wipeable_string(result) is True
+        phrase: ots_handle_t = ots_result_handle(result)
+        assert len(ots_wipeable_string_c_str(phrase).split(' ')) == 25  # Monero seed phrases are 25 words long
+
     :param seed: The handle of the seed.
-    :param language_code: The code of the seed language.
-    :param password: The password to use for generating the seed phrase.
+    :type seed: ots_handle_t | _CDataBase
+    :param str language_code: The code of the seed language.
+    :param str password: The password to use for generating the seed phrase.
     :return: ots_result_t containing the seed phrase.
     """
     assert isinstance(seed, (ots_handle_t, _CDataBase)), "seed must be an instance of ots_handle_t or _CDataBase"
@@ -2501,8 +2771,19 @@ def ots_seed_indices(
     """
     Returns the seed indices for a given seed handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_indices(seed, 'my_password')
+        assert ots_result_is_seed_indices(result)
+        si: ots_handle_t = ots_result_handle(result)
+        assert ots_seed_indices_count(si) == 24  # Monero seeds have 24 indices + 1 checksum (which is dropped on indices)
+
     :param handle: The handle of the seed.
+    :type handle: ots_handle_t | _CDataBase
     :param password: The password to use for generating the seed indices.
+    :type password: str
     :return: ots_result_t containing the seed indices.
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
@@ -2515,7 +2796,16 @@ def ots_seed_fingerprint(handle: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the fingerprint of a given seed handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_fingerprint(seed)
+        fingerprint: ots_handle_t = ots_result_string(result)
+        assert len(fingerprint) == 6 and all(c in '0123456789ABCDEF' for c in fingerprint)  # Monero seed fingerprints are 6 hex characters long
+
     :param handle: The handle of the seed.
+    :type handle: ots_handle_t | _CDataBase
     :return: ots_result_t containing the fingerprint of the seed.
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
@@ -2527,7 +2817,29 @@ def ots_seed_is_legacy(handle: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Checks if the given seed handle is a legacy seed.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        monero_seed: ots_handle_t = ots_result_handle(result)
+        result = ots_polyseed_generate()
+        polyseed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_indices(monero_seed)
+        si: ots_handle_t = ots_result_handle(result)
+        indices: list[int] = ots_seed_indices_values(si)[:12]  # take 12 indices for legacy seed
+        result = ots_seed_indices_create(indices)
+        si = ots_result_handle(result)
+        result = ots_legacy_seed_decode_indices(si)
+        legacy_seed: ots_handle_t = ots_result_handle(result)
+
+        result = ots_seed_is_legacy(monero_seed)
+        assert ots_result_bool(result) is False  # Monero seed is not legacy
+        result = ots_seed_is_legacy(polyseed)
+        assert ots_result_bool(result) is False  # Polyseed is not legacy
+        result = ots_seed_is_legacy(legacy_seed)
+        assert ots_result_bool(result) is True  # Legacy seed is legacy
+
     :param handle: The handle of the seed.
+    :type handle: ots_handle_t | _CDataBase
     :return: ots_result_t indicating whether the seed is legacy.
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
@@ -2538,6 +2850,14 @@ def ots_seed_is_legacy(handle: ots_handle_t | _CDataBase) -> ots_result_t:
 def ots_seed_type(handle: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the type of the given seed handle.
+
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_type(seed)
+        seed_type: SeedType = ots_result_seed_type(result)
+        assert seed_type == SeedType.MONERO  # Monero seed type
 
     :param handle: The handle of the seed.
     :return: ots_result_t containing the type of the seed.
@@ -2551,6 +2871,15 @@ def ots_seed_address(handle: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the address associated with the given seed handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_address(seed)
+        address: ots_handle_t = ots_result_handle(result)
+        result = ots_address_base58_string(address)
+        assert len(ots_result_string(address)) == 95  # Monero addresses are 95 characters long
+
     :param handle: The handle of the seed.
     :return: ots_result_t containing the address of the seed.
     """
@@ -2563,7 +2892,17 @@ def ots_seed_timestamp(handle: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the timestamp associated with the given seed handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_timestamp(seed)
+        assert ots_result_is_number(result)
+        timestamp: int = ots_result_number(result)
+        assert timestamp >= 0  # Timestamp should be a non-negative integer
+
     :param handle: The handle of the seed.
+    :type handle: ots_handle_t | _CDataBase
     :return: ots_result_t containing the timestamp of the seed.
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
@@ -2575,7 +2914,17 @@ def ots_seed_height(handle: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the height associated with the given seed handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_height(seed)
+        assert ots_result_is_number(result)
+        height: int = ots_result_number(result)
+        assert height >= 0  # Height should be a non-negative integer
+
     :param handle: The handle of the seed.
+    :type handle: ots_handle_t | _CDataBase
     :return: ots_result_t containing the height of the seed.
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
@@ -2587,7 +2936,16 @@ def ots_seed_network(handle: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the network associated with the given seed handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate(network=Network.STAGE)
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_network(seed)
+        network: Network = ots_result_network(result)
+        assert network == Network.STAGE  # The seed was generated for the STAGE network
+
     :param handle: The handle of the seed.
+    :type handle: ots_handle_t | _CDataBase
     :return: ots_result_t containing the network of the seed.
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
@@ -2599,7 +2957,16 @@ def ots_seed_wallet(handle: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the wallet associated with the given seed handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_wallet(seed)
+        assert ots_result_is_wallet(result)
+        wallet: ots_handle_t = ots_result_handle(result)
+
     :param handle: The handle of the seed.
+    :type handle: ots_handle_t | _CDataBase
     :return: ots_result_t containing the wallet of the seed.
     """
     assert isinstance(handle, (ots_handle_t, _CDataBase)), "handle must be an instance of ots_handle_t or _CDataBase"
@@ -2614,8 +2981,21 @@ def ots_seed_indices_merge_values(
     """
     Merges two seed indices handles into one.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_indices_create([1, 2, 3])
+        seed_indices1: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_indices_create([4, 5, 6])
+        seed_indices2: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_indices_merge_values(seed_indices1, seed_indices2)
+        merged_indices: ots_handle_t = ots_result_handle(result)
+        assert ots_seed_indices_values(merged_indices) == [5, 7, 5]  # [1, 2, 3] ^ [4, 5, 6] = [5, 7, 5]
+
+
     :param seed_indices1: The first seed indices handle.
+    :type seed_indices1: ots_handle_t | _CDataBase
     :param seed_indices2: The second seed indices handle.
+    :type seed_indices2: ots_handle_t | _CDataBase
     :return: ots_result_t containing the merged seed indices.
     """
     assert isinstance(seed_indices1, (ots_handle_t, _CDataBase)), "seed_indices1 must be an instance of ots_handle_t or _CDataBase"
@@ -2632,8 +3012,17 @@ def ots_seed_indices_merge_with_password(
     """
     Merges seed indices with a password.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_indices_create([1, 2, 3])
+        seed_indices: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_indices_merge_with_password(seed_indices, 'my_password')
+        assert ots_result_is_seed_indices(result)
+        merged_indices: ots_handle_t = ots_result_handle(result)
+
     :param seed_indices: The handle of the seed indices to merge.
-    :param password: The password to use for merging.
+    :type seed_indices: ots_handle_t | _CDataBase
+    :param str password: The password to use for merging.
     :return: ots_result_t containing the merged seed indices.
     """
     assert isinstance(seed_indices, (ots_handle_t, _CDataBase)), "seed_indices must be an instance of ots_handle_t or _CDataBase"
@@ -2649,8 +3038,21 @@ def ots_seed_indices_merge_multiple_values(
     """
     Merges multiple seed indices handles into one.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_indices_create([1, 2, 3])
+        seed_indices1: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_indices_create([4, 5, 6])
+        seed_indices2: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_indices_create([5, 7, 5])
+        seed_indices3: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_indices_merge_multiple_values([seed_indices1, seed_indices2, seed_indices3], 3)
+        merged_indices: ots_handle_t = ots_result_handle(result)
+        assert ots_seed_indices_values(merged_indices) == [0, 0, 0]
+
     :param seed_indices: A list of seed indices handles to merge.
-    :param elements: The number of elements in the list.
+    :type seed_indices: list[ots_handle_t | _CDataBase]
+    :param int elements: The number of elements in the list.
     :return: ots_result_t containing the merged seed indices.
     """
     assert isinstance(seed_indices, list) and all(isinstance(i, (ots_handle_t, _CDataBase)) for i in seed_indices), "seed_indices must be a list of ots_handle_t or _CDataBase"
@@ -2672,9 +3074,29 @@ def ots_seed_indices_merge_values_and_zero(
     """
     Merges two seed indices handles into one and optionally deletes them after merging.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_indices_create([1, 2, 3])
+        seed_indices1: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_indices_create([4, 5, 6])
+        seed_indices2: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_indices_merge_values_and_zero(seed_indices1, seed_indices2, delete_after=True)
+        merged_indices: ots_handle_t = ots_result_handle(result)
+        del seed_indices1, seed_indices2  # Don't use seed_indices1 and seed_indices2 anymore because it will result in a segmentation fault, because the memory is wiped and freed already, but CFFI will not inform the _CDataBase object about it.
+
+    .. warning::
+
+        Do not use the provided seed indices handles after calling this function
+        anymore, as they memory will be wiped and with delete_after set to True,
+        also freed. Using them will result in a segmentation fault. Anyway, the
+        CFFI will not inform the `_CDataBase` object about it, so it will lead
+        to a segmentation fault when trying to access the handle again.
+
     :param seed_indices1: The first seed indices handle.
+    :type seed_indices1: ots_handle_t | _CDataBase
     :param seed_indices2: The second seed indices handle.
-    :param delete_after: Whether to delete the original handles after merging.
+    :type seed_indices2: ots_handle_t | _CDataBase
+    :param bool delete_after: Whether to delete the original handles after merging.
     :return: ots_result_t containing the merged seed indices.
     """
     assert isinstance(seed_indices1, (ots_handle_t, _CDataBase)), "seed_indices1 must be an instance of ots_handle_t or _CDataBase"
@@ -2692,9 +3114,26 @@ def ots_seed_indices_merge_with_password_and_zero(
     """
     Merges seed indices with a password and optionally deletes the original handle after merging.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_indices_create([1, 2, 3])
+        seed_indices: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_indices_merge_with_password_and_zero(seed_indices, 'my_password', delete_after=True)
+        del seed_indices  # Don't use seed_indices anymore because it will result in a segmentation fault, because the memory is wiped and freed already, but CFFI will not inform the _CDataBase object about it.
+        merged_indices: ots_handle_t = ots_result_handle(result)
+
+    .. warning::
+
+        Do not use the provided seed indices handle after calling this function
+        anymore, as the memory will be wiped and with `delete_after` set to True,
+        also freed. Using it will result in a segmentation fault. Anyway, the
+        CFFI will not inform the `_CDataBase` object about it, so it will lead
+        to a segmentation fault when trying to access the handle again.
+
     :param seed_indices: The handle of the seed indices to merge.
-    :param password: The password to use for merging.
-    :param delete_after: Whether to delete the original handle after merging.
+    :type seed_indices: ots_handle_t | _CDataBase
+    :param str password: The password to use for merging.
+    :param bool delete_after: Whether to delete the original handle after merging.
     :return: ots_result_t containing the merged seed indices.
     """
     assert isinstance(seed_indices, (ots_handle_t, _CDataBase)), "seed_indices must be an instance of ots_handle_t or _CDataBase"
@@ -2711,9 +3150,14 @@ def ots_seed_indices_merge_multiple_values_and_zero(
     """
     Merges multiple seed indices handles into one and optionally deletes them after merging.
 
+    .. seealso:: :py:func:`ots_seed_indices_merge_multiple_values`
+
+    .. warning:: see :py:func:`ots_seed_indices_merge_values_and_zero` about the provided seed handles.
+
     :param seed_indices: A list of seed indices handles to merge.
-    :param elements: The number of elements in the list.
-    :param delete_after: Whether to delete the original handles after merging.
+    :type seed_indices: list[ots_handle_t | _CDataBase] | _CDataBase
+    :param int elements: The number of elements in the list.
+    :param bool delete_after: Whether to delete the original handles after merging.
     :return: ots_result_t containing the merged seed indices.
     """
     assert isinstance(seed_indices, list) and all(isinstance(i, (ots_handle_t, _CDataBase)) for i in seed_indices), "seed_indices must be a list of ots_handle_t or _CDataBase"
@@ -2737,10 +3181,21 @@ def ots_legacy_seed_decode(
     """
     Decodes a legacy seed phrase into its components.
 
-    :param phrase: The legacy seed phrase to decode.
-    :param height: The height at which the seed was created.
-    :param time: The time at which the seed was created.
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_phrase_for_language_code(seed, 'en')
+        ws: ots_handle_t = ots_result_handle(result)
+        phrase: str = ots_wipeable_string_c_str(phrase).split(' ')[:12]
+        result = ots_legacy_seed_decode(phrase, 1024, network=Network.TEST)
+        legacy_seed: ots_handle_t = ots_result_handle(result)
+
+    :param str phrase: The legacy seed phrase to decode.
+    :param int height: The height at which the seed was created.
+    :param int time: The time at which the seed was created.
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
+    :type network: Network | int
     :return: ots_result_t containing the decoded seed information.
     """
     assert isinstance(phrase, str), "phrase must be a string"
@@ -2760,9 +3215,11 @@ def ots_legacy_seed_decode_indices(
     Decodes a legacy seed indices handle into its components.
 
     :param indices: The handle containing the legacy seed indices to decode.
-    :param height: The height at which the seed was created.
-    :param time: The time at which the seed was created.
+    :type indices: ots_handle_t | _CDataBase
+    :param int height: The height at which the seed was created.
+    :param int time: The time at which the seed was created.
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
+    :type network: Network | int
     :return: ots_result_t containing the decoded seed information.
     """
     assert isinstance(indices, (ots_handle_t, _CDataBase)), "indices must be an instance of ots_handle_t or _CDataBase"
@@ -2782,10 +3239,20 @@ def ots_monero_seed_create(
     """
     Creates a new Monero seed with the specified parameters.
 
-    :param random: Random 32 bytes to use for seed creation.
-    :param height: The height at which the seed is created.
-    :param time: The time at which the seed is created.
+    .. code-block:: python
+
+        from time import time as current_time
+        result: ots_result_t = ots_random_32()
+        random: bytes = ots_result_char_array(result)
+        result = ots_monero_seed_create(random, time=current_time(), network=Network.MAIN)
+        assert ots_result_is_seed(result)
+        seed: ots_handle_t = ots_result_handle(result)
+
+    :param bytes random: Random 32 bytes to use for seed creation.
+    :param int height: The height at which the seed is created.
+    :param int time: The time at which the seed is created.
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
+    :type network: Network | int
     :return: ots_result_t containing the created Monero seed.
     """
     assert isinstance(random, bytes), "random must be bytes"
@@ -2803,6 +3270,11 @@ def ots_monero_seed_generate(
 ) -> ots_result_t:
     """
     Generates a new Monero seed with the specified parameters.
+
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
 
     :param height: The height at which the seed is generated.
     :param time: The time at which the seed is generated.
@@ -2825,11 +3297,27 @@ def ots_monero_seed_decode(
     """
     Decodes a Monero seed phrase into its components.
 
-    :param phrase: The Monero seed phrase to decode.
-    :param height: The height at which the seed was created.
-    :param time: The time at which the seed was created.
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_fingerprint(seed)
+        fp1: str = ots_result_string(result)
+        result = ots_seed_phrase_for_language_code(seed, 'en', 'my_password')
+        ws: ots_handle_t = ots_result_handle(result)
+        phrase: str = ots_wipeable_string_c_str(ws)
+        result = ots_monero_seed_decode(phrase, passphrase='my_passphrase')
+        seed2: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_fingerprint(seed2)
+        fp2: str = ots_result_string(result)
+        assert fp1 == fp2  # The fingerprint should match the original seed
+
+    :param str phrase: The Monero seed phrase to decode.
+    :param int height: The height at which the seed was created.
+    :param int time: The time at which the seed was created.
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
-    :param passphrase: An optional passphrase for additional security.
+    :type network: Network | int
+    :param str passphrase: An optional passphrase for additional security.
     :return: ots_result_t containing the decoded seed information.
     """
     assert isinstance(phrase, str), "phrase must be a string"
@@ -2850,11 +3338,27 @@ def ots_monero_seed_decode_indices(
     """
     Decodes a Monero seed indices handle into its components.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_monero_seed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_fingerprint(seed)
+        fp1: str = ots_result_string(result)
+        result = ots_seed_indices(seed)
+        si: ots_handle_t = ots_result_handle(result)
+        result = ots_monero_seed_decode_indices(si)
+        seed2: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_fingerprint(seed2)
+        fp2: str = ots_result_string(result)
+        assert fp1 == fp2  # The fingerprint should match the original seed
+
     :param indices: The handle containing the Monero seed indices to decode.
-    :param height: The height at which the seed was created.
-    :param time: The time at which the seed was created.
+    :type indices: ots_handle_t | _CDataBase
+    :param int height: The height at which the seed was created.
+    :param int time: The time at which the seed was created.
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
-    :param passphrase: An optional passphrase for additional security.
+    :type network: Network | int
+    :param str passphrase: An optional passphrase for additional security.
     :return: ots_result_t containing the decoded seed information.
     """
     assert isinstance(indices, (ots_handle_t, _CDataBase)), "indices must be an instance of ots_handle_t or _CDataBase"
@@ -2875,10 +3379,18 @@ def ots_polyseed_create(
     """
     Creates a new Polyseed with the specified parameters.
 
-    :param random: Random 19 bytes to use for seed creation.
+    .. code-block:: python
+
+        from time import time as current_time
+        result: ots_result_t = ots_random_bytes(19)
+        random: bytes = ots_result_char_array(result)
+        result = ots_polyseed_create(random)
+
+    :param bytes random: Random 19 bytes to use for seed creation.
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
-    :param time: The time at which the seed is created, defaults to 0 (current time).
-    :param passphrase: Optional passphrase for seed offset (empty string for none).
+    :type network: Network | int
+    :param int time: The time at which the seed is created, defaults to 0 (current time).
+    :param str passphrase: Optional passphrase for seed offset (empty string for none).
     :return: ots_result_t containing the created Polyseed.
     """
     assert isinstance(random, bytes), "random must be bytes"
@@ -2896,9 +3408,15 @@ def ots_polyseed_generate(
     """
     Generates a new Polyseed with the specified parameters.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_polyseed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
-    :param time: The time at which the seed is generated, defaults to 0 (current time).
-    :param passphrase: Optional passphrase for seed offset (empty string for none).
+    :type network: Network | int
+    :param int time: The time at which the seed is generated, defaults to 0 (current time).
+    :param str passphrase: Optional passphrase for seed offset (empty string for none).
     :return: ots_result_t containing the generated Polyseed.
     """
     assert isinstance(network, (Network, int)), "network must be an instance of Network or an integer"
@@ -2916,10 +3434,26 @@ def ots_polyseed_decode(
     """
     Decodes a Polyseed phrase into its components.
 
-    :param phrase: The Polyseed phrase to decode.
+    .. code-block:: python
+
+        result: ots_result_t = ots_polyseed_generate(passphrase='offset')
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_fingerprint(seed)
+        fp1: str = ots_result_string(result)
+        result = ots_seed_phrase_for_language_code(seed, 'en', 'my_password')
+        ws: ots_handle_t = ots_result_handle(result)
+        phrase: str = ots_wipeable_string_c_str(ws)
+        result = ots_polyseed_decode(phrase, password='my_password', passphrase='offset')
+        seed2: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_fingerprint(seed2)
+        fp2: str = ots_result_string(result)
+        assert fp1 == fp2  # The fingerprint should match the original seed
+
+    :param str phrase: The Polyseed phrase to decode.
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
-    :param password: Optional decryption password (empty string for none).
-    :param passphrase: Optional passphrase for seed offset (empty string for none).
+    :type network: Network | int
+    :param str password: Optional decryption password (empty string for none).
+    :param str passphrase: Optional passphrase for seed offset (empty string for none).
     :return: ots_result_t containing the decoded seed information.
     """
     assert isinstance(phrase, str), "phrase must be a string"
@@ -2938,10 +3472,26 @@ def ots_polyseed_decode_indices(
     """
     Decodes a Polyseed indices handle into its components.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_polyseed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_fingerprint(seed)
+        fp1: str = ots_result_string(result)
+        result = ots_seed_indices(seed)
+        si: ots_handle_t = ots_result_handle(result)
+        result = ots_polyseed_decode_indices(si)
+        seed2: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_fingerprint(seed2)
+        fp2: str = ots_result_string(result)
+        assert fp1 == fp2  # The fingerprint should match the original seed
+
     :param indices: The handle containing the Polyseed indices to decode.
+    :type indices: ots_handle_t | _CDataBase
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
-    :param password: Optional decryption password (empty string for none).
-    :param passphrase: Optional passphrase for seed offset (empty string for none).
+    :type network: Network | int
+    :param str password: Optional decryption password (empty string for none).
+    :param str passphrase: Optional passphrase for seed offset (empty string for none).
     :return: ots_result_t containing the decoded seed information.
     """
     assert isinstance(indices, (ots_handle_t, _CDataBase)), "indices must be an instance of ots_handle_t or _CDataBase"
@@ -2962,11 +3512,30 @@ def ots_polyseed_decode_with_language(
     """
     Decodes a Polyseed phrase using a specific language.
 
-    :param phrase: The Polyseed phrase to decode.
+    .. code-block:: python
+
+        result: ots_result_t = ots_polyseed_generate()
+        seed: ots_handle_t = ots_result_handle(result)
+        result = ots_seed_phrase_for_language_code(seed, 'en')
+        ws: ots_handle_t = ots_result_handle(result)
+        phrase: str = ots_wipeable_string_c_str(ws)
+        result = ots_seed_language_from_code('en')
+        en: ots_handle_t = ots_result_handle(result)
+        result = ots_polyseed_decode_with_language(phrase, en)
+        seed2: ots_handle_t = ots_result_handle(result)
+
+    .. note::
+
+        This function is only needed if the Polyseed phrase could be more
+        then one language, should not really happen, IMO.
+
+    :param str phrase: The Polyseed phrase to decode.
     :param language: The handle of the seed language to use for decoding.
+    :type language: ots_handle_t | _CDataBase
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
-    :param password: Optional decryption password (empty string for none).
-    :param passphrase: Optional passphrase for seed offset (empty string for none).
+    :type network: Network | int
+    :param str password: Optional decryption password (empty string for none).
+    :param str passphrase: Optional passphrase for seed offset (empty string for none).
     :return: ots_result_t containing the decoded seed information.
     """
     assert isinstance(phrase, str), "phrase must be a string"
@@ -2988,11 +3557,14 @@ def ots_polyseed_decode_with_language_code(
     """
     Decodes a Polyseed phrase using a specific language code.
 
-    :param phrase: The Polyseed phrase to decode.
-    :param language_code: The code of the seed language to use for decoding.
+    .. seealso:: :py:func:`ots_polyseed_decode_with_language`, only difference is that this function uses a language code instead of a language handle.
+
+    :param str phrase: The Polyseed phrase to decode.
+    :param str language_code: The code of the seed language to use for decoding.
     :param network: The network for which the seed is intended (Main, Test, or Stagenet).
-    :param password: Optional decryption password (empty string for none).
-    :param passphrase: Optional passphrase for seed offset (empty string for none).
+    :type network: Network | int
+    :param str password: Optional decryption password (empty string for none).
+    :param str passphrase: Optional passphrase for seed offset (empty string for none).
     :return: ots_result_t containing the decoded seed information.
     """
     assert isinstance(phrase, str), "phrase must be a string"
@@ -3007,7 +3579,15 @@ def ots_address_create(address: str) -> ots_result_t:
     """
     Creates an address from a given string.
 
-    :param address: The address string to create.
+    .. code-block:: python
+
+        addr: str = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        result: ots_result_t = ots_address_create(addr)
+        address: ots_handle_t = ots_result_handle(result)
+        result = ots_address_base58_string(address)
+        assert ots_result_string(result) == addr
+
+    :param str address: The address string to create.
     :return: ots_result_t containing the created address handle.
     """
     assert isinstance(address, str), "address must be a string"
@@ -3018,7 +3598,17 @@ def ots_address_type(address: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the type of the given address handle.
 
+    .. code-block:: python
+
+        addr: str = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        result: ots_result_t = ots_address_create(addr)
+        address: ots_handle_t = ots_result_handle(result)
+        result = ots_address_type(address)
+        at: AddressType = ots_result_address_type(result)
+        assert at == AddressType.STANDARD
+
     :param address: The handle of the address.
+    :type address: ots_handle_t | _CDataBase
     :return: ots_result_t containing the type of the address.
     """
     assert isinstance(address, (ots_handle_t, _CDataBase)), "address must be an instance of ots_handle_t or _CDataBase"
@@ -3030,7 +3620,16 @@ def ots_address_network(address: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the network of the given address handle.
 
+    .. code-block:: python
+
+        addr: str = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        result: ots_result_t = ots_address_create(addr)
+        address: ots_handle_t = ots_result_handle(result)
+        result = ots_address_network(address)
+        assert ots_result_network(result) == Network.MAIN
+
     :param address: The handle of the address.
+    :type address: ots_handle_t | _CDataBase
     :return: ots_result_t containing the network of the address.
     """
     assert isinstance(address, (ots_handle_t, _CDataBase)), "address must be an instance of ots_handle_t or _CDataBase"
@@ -3038,6 +3637,7 @@ def ots_address_network(address: ots_handle_t | _CDataBase) -> ots_result_t:
     return ots_result_t(lib.ots_address_network(_unwrap(address)))
 
 
+# TODO: <-- continue here with the rest of functions
 def ots_address_fingerprint(address: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the fingerprint of the given address handle.
@@ -4699,7 +5299,7 @@ def ots_check_low_entropy(
     """
     assert isinstance(data, bytes), "data must be a bytes object"
     assert isinstance(size, int), "size must be an integer"
-    assert size > 0, "size must be a positive integer"
+    assert size >= 0, "size must be a non-negative integer"
     assert isinstance(min_entropy, float), "min_entropy must be a float"
     return ots_result_t(lib.ots_check_low_entropy(ffi.cast('uint8_t *', data), len(data), min_entropy))
 
