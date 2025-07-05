@@ -17,7 +17,6 @@ class SeedLanguage:
         Initializes the SeedLanguage instance with a handle.
 
         :param ots_handle_t handle: The handle to the seed language.
-        :meta private:
         """
         assert isinstance(handle, ots_handle_t), "handle must be an instance of ots_handle_t"
         assert handle.type == HandleType.SEED_LANGUAGE, "handle must be of type SEED_LANGUAGE"
@@ -35,15 +34,11 @@ class SeedLanguage:
         return self.englishName
 
     def __repr__(self):
-        """
-        :meta private:
-        """
         return f"SeedLanguage({str(self)})"
 
     def __hash__(self):
         """
         Returns the hash of the SeedLanguage instance.
-        :meta private:
         """
         return hash(self.code)
 
@@ -111,21 +106,6 @@ class SeedLanguage:
             raise OtsException.from_result(result)
         return ots_result_boolean(result)
 
-    def index(self, seedType: SeedType) -> int:
-        """
-        Returns the index of the seed language for the given seed type.
-
-        :param SeedType seedType: The type of seed to get the index for.
-        :return: The index of the seed language for the given seed type.
-        """
-        if seedType in self._index:
-            return self._index[seedType]
-        result: ots_result_t = ots_seed_language_index(self.handle, seedType)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
-        self._index[seedType] = ots_result_int(result)
-        return self._index[seedType]
-
     def __eq__(self, other: object) -> bool:
         """
         Checks equality with another SeedLanguage instance or a string.
@@ -135,7 +115,7 @@ class SeedLanguage:
         :return: True if the two instances or the instance and the string have the same code, False otherwise.
         """
         if isinstance(other, str):
-            return self.code.tolower() == other.code.lower()
+            return self.code.lower() == other.lower()
         if not isinstance(other, SeedLanguage):
             raise NotImplementedError("other must be an instance of SeedLanguage or str")
         assert isinstance(other, SeedLanguage), "other must be an instance of SeedLanguage"

@@ -158,7 +158,7 @@ class Seed:
         """
         if self._time is not None:
             return self._time
-        self._time = datetime.fromtimestamp(self.timestamp())
+        self._time = datetime.fromtimestamp(self.timestamp)
         return self._time
 
     @property
@@ -384,6 +384,17 @@ class Polyseed(Seed):
     Polyseed class to handle Polyseed (16 word) seeds,
     with timestamp and encryption support included.
     """
+
+    def moneroSeed(self) -> MoneroSeed:
+        """
+        Converts the Polyseed to a MoneroSeed. (Creates a new MoneroSeed instance from the Polyseed)
+
+        :return: A MoneroSeed object representing the Polyseed.
+        """
+        result: ots_result_t = ots_polyseed_convert_to_monero_seed(self.handle)
+        if ots_is_error(result):
+            raise OtsException.from_result(result)
+        return MoneroSeed(ots_result_handle(result))
 
     @classmethod
     def create(

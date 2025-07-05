@@ -1815,6 +1815,21 @@ def ots_result_is_address_type(result: ots_result_t | _CDataBase) -> bool:
     return lib.ots_result_is_address_type(_unwrap(result))
 
 
+def ots_result_address_type(result: ots_result_t | _CDataBase) -> AddressType:
+    """
+    Returns the address type from the result.
+
+    .. code-block:: python
+
+        address_type: AddressType = ots_result_address_type(result)
+
+    :param result: The result to get the address type from.
+    :return: The address type as an AddressType object.
+    """
+    assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
+    return AddressType(lib.ots_result_address_type(_unwrap(result)))
+
+
 def ots_result_address_type_is_type(
     result: ots_result_t | _CDataBase,
     type: AddressType | int
@@ -3575,6 +3590,28 @@ def ots_polyseed_decode_with_language_code(
     return ots_result_t(lib.ots_polyseed_decode_with_language_code(phrase.encode('utf-8'), language_code.encode('utf-8'), int(network), password.encode('utf-8'), passphrase.encode('utf-8')))
 
 
+def ots_polyseed_convert_to_monero_seed(
+    polyseed: ots_handle_t | _CDataBase
+) -> ots_result_t:
+    """
+    Converts a Polyseed handle to a MoneroSeed handle.
+
+    .. code-block:: python
+
+        result: ots_result_t = ots_polyseed_generate()
+        polyseed: ots_handle_t = ots_result_handle(result)
+        result = ots_polyseed_convert_to_monero_seed(polyseed)
+        monero_seed: ots_handle_t = ots_result_handle(result)
+
+    :param polyseed: The handle of the Polyseed to convert.
+    :type polyseed: ots_handle_t | _CDataBase
+    :return: ots_result_t containing the converted Monero seed handle.
+    """
+    assert isinstance(polyseed, (ots_handle_t, _CDataBase)), "polyseed must be an instance of ots_handle_t or _CDataBase"
+    assert HandleType(_unwrap(polyseed).type) == HandleType.SEED, "polyseed must be of type HandleType.SEED"
+    return ots_result_t(lib.ots_polyseed_convert_to_monero_seed(_unwrap(polyseed)))
+
+
 def ots_address_create(address: str) -> ots_result_t:
     """
     Creates an address from a given string.
@@ -3637,12 +3674,20 @@ def ots_address_network(address: ots_handle_t | _CDataBase) -> ots_result_t:
     return ots_result_t(lib.ots_address_network(_unwrap(address)))
 
 
-# TODO: <-- continue here with the rest of functions
 def ots_address_fingerprint(address: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the fingerprint of the given address handle.
 
+    .. code-block:: python
+
+        addr: str = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        result: ots_result_t = ots_address_create(addr)
+        address: ots_handle_t = ots_result_handle(result)
+        result = ots_address_fingerprint(address)
+        fingerprint: str = ots_result_string(result)
+
     :param address: The handle of the address.
+    :type address: ots_handle_t | _CDataBase
     :return: ots_result_t containing the fingerprint of the address.
     """
     assert isinstance(address, (ots_handle_t, _CDataBase)), "address must be an instance of ots_handle_t or _CDataBase"
@@ -3654,7 +3699,22 @@ def ots_address_is_integrated(address: ots_handle_t | _CDataBase) -> ots_result_
     """
     Checks if the given address handle is an integrated address.
 
+    .. code-block:: python
+
+        addr: str = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        result: ots_result_t = ots_address_create(addr)
+        address: ots_handle_t = ots_result_handle(result)
+        result = ots_address_is_integrated(address)
+        assert ots_result_boolean(result) is False  # This address is not integrated
+
+        addr = '4Jmnw8aLmCzAA4a2rRjLmbT4uJadSZxzrW1nJh3NJYDr87hEdiFhaCcGyK87kb8u1i1DWtwKTUnoZ6uobbotLGqX5QeCPeUbcLb1iqv4E7'
+        result: ots_result_t = ots_address_create(addr)
+        address: ots_handle_t = ots_result_handle(result)
+        result = ots_address_is_integrated(address)
+        assert ots_result_boolean(result) is True  # This address is integrated
+
     :param address: The handle of the address.
+    :type address: ots_handle_t | _CDataBase
     :return: ots_result_t indicating whether the address is integrated.
     """
     assert isinstance(address, (ots_handle_t, _CDataBase)), "address must be an instance of ots_handle_t or _CDataBase"
@@ -3666,7 +3726,16 @@ def ots_address_payment_id(address: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the payment ID of the given address handle.
 
+    .. code-block:: python
+
+        addr: str = '4Jmnw8aLmCzAA4a2rRjLmbT4uJadSZxzrW1nJh3NJYDr87hEdiFhaCcGyK87kb8u1i1DWtwKTUnoZ6uobbotLGqX5QeCPeUbcLb1iqv4E7'
+        result: ots_result_t = ots_address_create(addr)
+        address: ots_handle_t = ots_result_handle(result)
+        result = ots_address_payment_id(address)
+        assert ots_result_string(result) == '59f3832901727c06'  # payment ID of the address
+
     :param address: The handle of the address.
+    :type address: ots_handle_t | _CDataBase
     :return: ots_result_t containing the payment ID of the address.
     """
     assert isinstance(address, (ots_handle_t, _CDataBase)), "address must be an instance of ots_handle_t or _CDataBase"
@@ -3678,7 +3747,17 @@ def ots_address_from_integrated(address: ots_handle_t | _CDataBase) -> ots_resul
     """
     Extracts the base address from an integrated address handle.
 
+    .. code-block:: python
+
+        addr: str = '4Jmnw8aLmCzAA4a2rRjLmbT4uJadSZxzrW1nJh3NJYDr87hEdiFhaCcGyK87kb8u1i1DWtwKTUnoZ6uobbotLGqX5QeCPeUbcLb1iqv4E7'
+        result: ots_result_t = ots_address_create(addr)
+        address: ots_handle_t = ots_result_handle(result)
+        result = ots_address_from_integrated(address)
+        base_address: ots_handle_t = ots_result_handle(result)
+        assert ots_address_base58_string(base_address) == '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+
     :param address: The handle of the integrated address.
+    :type address: ots_handle_t | _CDataBase
     :return: ots_result_t containing the base address.
     """
     assert isinstance(address, (ots_handle_t, _CDataBase)), "address must be an instance of ots_handle_t or _CDataBase"
@@ -3690,7 +3769,16 @@ def ots_address_length(address: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the length of the given address handle.
 
+    .. code-block:: python
+
+        addr: str = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        result: ots_result_t = ots_address_create(addr)
+        address: ots_handle_t = ots_result_handle(result)
+        result = ots_address_length(address)
+        assert ots_result_number(result) == 95  # Length of the address in base58
+
     :param address: The handle of the address.
+    :type address: ots_handle_t | _CDataBase
     :return: ots_result_t containing the length of the address.
     """
     assert isinstance(address, (ots_handle_t, _CDataBase)), "address must be an instance of ots_handle_t or _CDataBase"
@@ -3702,7 +3790,16 @@ def ots_address_base58_string(address_handle: ots_handle_t | _CDataBase) -> ots_
     """
     Returns the base58 string representation of the given address handle.
 
+    .. code-block:: python
+
+        addr: str = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        result: ots_result_t = ots_address_create(addr)
+        address: ots_handle_t = ots_result_handle(result)
+        result = ots_address_base58_string(address)
+        assert ots_result_string(result) == addr  # The base58 string should match the original address
+
     :param address_handle: The handle of the address.
+    :type address_handle: ots_handle_t | _CDataBase
     :return: ots_result_t containing the base58 string representation of the address.
     """
     assert isinstance(address_handle, (ots_handle_t, _CDataBase)), "address_handle must be an instance of ots_handle_t or _CDataBase"
@@ -3717,8 +3814,21 @@ def ots_address_equal(
     """
     Compares two address handles for equality.
 
+    .. code-block:: python
+
+        addr1: str = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        addr2: str = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        result1: ots_result_t = ots_address_create(addr1)
+        address1: ots_handle_t = ots_result_handle(result1)
+        result2: ots_result_t = ots_address_create(addr2)
+        address2: ots_handle_t = ots_result_handle(result2)
+        result = ots_address_equal(address1, address2)
+        assert ots_result_boolean(result) is True  # The addresses should be equal
+
     :param address1: The first address handle.
+    :type address1: ots_handle_t | _CDataBase
     :param address2: The second address handle.
+    :type address2: ots_handle_t | _CDataBase
     :return: ots_result_t indicating whether the addresses are equal.
     """
     assert isinstance(address1, (ots_handle_t, _CDataBase)), "address1 must be an instance of ots_handle_t or _CDataBase"
@@ -3735,8 +3845,19 @@ def ots_address_equal_string(
     """
     Compares an address handle with a string representation of an address for equality.
 
+    .. code-block:: python
+
+        addr1: str = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        addr2: str = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        result1: ots_result_t = ots_address_create(addr1)
+        address1: ots_handle_t = ots_result_handle(result1)
+        result = ots_address_equal(address1, addr2)
+        assert ots_result_boolean(result) is True  # The addresses should be equal
+
     :param address_handle: The handle of the address.
+    :type address_handle: ots_handle_t | _CDataBase
     :param address_string: The string representation of the address.
+    :type address_string: str
     :return: ots_result_t indicating whether the address handle matches the string.
     """
     assert isinstance(address_handle, (ots_handle_t, _CDataBase)), "address_handle must be an instance of ots_handle_t or _CDataBase"
@@ -3752,8 +3873,14 @@ def ots_address_string_valid(
     """
     Checks if the given address string is valid for the specified network.
 
-    :param address: The address string to validate.
+    .. code-block:: python
+
+        result: ots_result_t = ots_address_string_valid('43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK', Network.MAIN)
+        assert ots_result_boolean(result) is True  # The address string should be valid
+
+    :param str address: The address string to validate.
     :param network: The network for which to validate the address (Main, Test, or Stagenet).
+    :type network: Network | int
     :return: ots_result_t indicating whether the address string is valid.
     """
     assert isinstance(address, str), "address must be a string"
@@ -3765,7 +3892,12 @@ def ots_address_string_network(address: str) -> ots_result_t:
     """
     Returns the network of the given address string.
 
-    :param address: The address string to check.
+    .. code-block:: python
+
+        result: ots_result_t = ots_address_string_network('43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK')
+        assert ots_result_network(result) == Network.MAIN  # The address string is on Main network
+
+    :param str address: The address string to check.
     :return: ots_result_t containing the network of the address.
     """
     assert isinstance(address, str), "address must be a string"
@@ -3776,7 +3908,12 @@ def ots_address_string_type(address: str) -> ots_result_t:
     """
     Returns the type of the given address string.
 
-    :param address: The address string to check.
+    .. code-block:: python
+
+        result: ots_result_t = ots_address_string_type('43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK')
+        assert ots_result_address_type(result) == AddressType.STANDARD  # The address string is of type STANDARD
+
+    :param str address: The address string to check.
     :return: ots_result_t containing the type of the address.
     """
     assert isinstance(address, str), "address must be a string"
@@ -3787,7 +3924,12 @@ def ots_address_string_fingerprint(address: str) -> ots_result_t:
     """
     Returns the fingerprint of the given address string.
 
-    :param address: The address string to check.
+    .. code-block:: python
+
+        result: ots_result_t = ots_address_string_fingerprint('43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK')
+        assert ots_result_string(result) == '9AE0BD'
+
+    :param str address: The address string to check.
     :return: ots_result_t containing the fingerprint of the address.
     """
     assert isinstance(address, str), "address must be a string"
@@ -3798,7 +3940,12 @@ def ots_address_string_is_integrated(address: str) -> ots_result_t:
     """
     Checks if the given address string is an integrated address.
 
-    :param address: The address string to check.
+    .. code-block:: python
+
+        result: ots_result_t = ots_address_string_is_integrated('4Jmnw8aLmCzAA4a2rRjLmbT4uJadSZxzrW1nJh3NJYDr87hEdiFhaCcGyK87kb8u1i1DWtwKTUnoZ6uobbotLGqX5QeCPeUbcLb1iqv4E7')
+        assert ots_result_boolean(result) is True  # The address string is integrated
+
+    :param str address: The address string to check.
     :return: ots_result_t indicating whether the address string is integrated.
     """
     assert isinstance(address, str), "address must be a string"
@@ -3809,7 +3956,12 @@ def ots_address_string_payment_id(address: str) -> ots_result_t:
     """
     Returns the payment ID of the given address string.
 
-    :param address: The address string to check.
+    .. code-block:: python
+
+        result: ots_result_t = ots_address_string_payment_id('4Jmnw8aLmCzAA4a2rRjLmbT4uJadSZxzrW1nJh3NJYDr87hEdiFhaCcGyK87kb8u1i1DWtwKTUnoZ6uobbotLGqX5QeCPeUbcLb1iqv4E7')
+        assert ots_result_string(result) == '59f3832901727c06'  # The payment ID of the address string
+
+    :param str address: The address string to check.
     :return: ots_result_t containing the payment ID of the address.
     """
     assert isinstance(address, str), "address must be a string"
@@ -3820,7 +3972,13 @@ def ots_address_string_integrated(address: str) -> ots_result_t:
     """
     Extracts the base address from an integrated address string.
 
-    :param address: The integrated address string to check.
+    .. code-block:: python
+
+        result: ots_result_t = ots_address_string_integrated('4Jmnw8aLmCzAA4a2rRjLmbT4uJadSZxzrW1nJh3NJYDr87hEdiFhaCcGyK87kb8u1i1DWtwKTUnoZ6uobbotLGqX5QeCPeUbcLb1iqv4E7')
+        base_address: ots_handle_t = ots_result_handle(result)
+        assert ots_address_base58_string(base_address) == '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+
+    :param str address: The integrated address string to check.
     :return: ots_result_t containing the base address.
     """
     assert isinstance(address, str), "address must be a string"
@@ -3835,9 +3993,17 @@ def ots_wallet_create(
     """
     Creates a new wallet with the specified key, height, and network.
 
-    :param key: The key to use for the wallet.
-    :param height: The height at which the wallet is created.
+    .. code-block:: python
+
+        result: ots_result_t = ots_random_32()
+        key: bytes = ots_result_char_array(result)
+        result = ots_wallet_create(key, 0, Network.MAIN)
+        wallet: ots_handle_t = ots_result_handle(result)
+
+    :param bytes key: The key to use for the wallet.
+    :param int height: The height at which the wallet is created.
     :param network: The network for which the wallet is intended (Main, Test, or Stagenet).
+    :type network: Network | int
     :return: ots_result_t containing the created wallet handle.
     """
     assert isinstance(key, bytes), "key must be bytes"
@@ -3851,7 +4017,13 @@ def ots_wallet_height(wallet: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the height of the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_height(wallet)
+        height: int = ots_result_number(result)
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :return: ots_result_t containing the height of the wallet.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -3863,7 +4035,13 @@ def ots_wallet_address(wallet: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the primary address of the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_address(wallet)
+        address: ots_handle_t = ots_result_handle(result)
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :return: ots_result_t containing the primary address of the wallet.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -3879,9 +4057,17 @@ def ots_wallet_subaddress(
     """
     Returns a subaddress from the given wallet handle based on account and index.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_subaddress(wallet, 0, 0)
+        standard_address: ots_handle_t = ots_result_handle(result)
+        result = ots_wallet_subaddress(wallet, 0, 1)
+        subaddress_account_0_index_1: ots_handle_t = ots_result_handle(result)
+
     :param wallet: The handle of the wallet.
-    :param account: The account number for the subaddress.
-    :param index: The index of the subaddress within the account.
+    :type wallet: ots_handle_t | _CDataBase
+    :param int account: The account number for the subaddress.
+    :param int index: The index of the subaddress within the account.
     :return: ots_result_t containing the requested subaddress.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -3899,9 +4085,20 @@ def ots_wallet_accounts(
     """
     Returns a list of accounts from the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_accounts(wallet, 10, 0)
+        accounts: list[ots_handle_t] = ots_result_handle_array(result)
+        assert len(accounts) == 10
+        result = ots_address_type(accounts[0])
+        assert ots_result_address_type(result) == AddressType.STANDARD  # The first account should be a standard address
+        result = ots_address_type(accounts[1])
+        assert ots_result_address_type(result) == AddressType.SUBADDRESS  # The second account should be a subaddress
+
     :param wallet: The handle of the wallet.
-    :param max: The maximum number of accounts to return.
-    :param offset: The offset from which to start returning accounts.
+    :type wallet: ots_handle_t | _CDataBase
+    :param int max: The maximum number of accounts to return.
+    :param int offset: The offset from which to start returning accounts.
     :return: ots_result_t containing the requested accounts.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -3920,10 +4117,28 @@ def ots_wallet_subaddresses(
     """
     Returns a list of subaddresses from the given wallet handle based on account.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_subaddresses(wallet, 0, 10, 0)
+        subaddresses: list[ots_handle_t] = ots_result_handle_array(result)
+        assert len(subaddresses) == 10
+        result = ots_address_type(subaddresses[0])
+        assert ots_result_address_type(result) == AddressType.STANDARD  # The first subaddress should be a standard address in the first account (0, 0)
+        result = ots_address_type(subaddresses[1])
+        assert ots_result_address_type(result) == AddressType.SUBADDRESS  # The second subaddress should be a subaddress in the first account (0, 1)
+        result = ots_wallet_subaddresses(wallet, 1, 5, 0)
+        subaddresses = ots_result_handle_array(result)
+        assert len(subaddresses) == 5
+        result = ots_address_type(subaddresses[0])
+        assert ots_result_address_type(result) == AddressType.SUBADDRESS # The first subaddress should be a subaddress in the second account (1, 0)
+        result = ots_address_type(subaddresses[1])
+        assert ots_result_address_type(result) == AddressType.SUBADDRESS  # The second subaddress should be a subaddress in the second account (1, 1)
+
     :param wallet: The handle of the wallet.
-    :param account: The account number for which to return subaddresses.
-    :param max: The maximum number of subaddresses to return.
-    :param offset: The offset from which to start returning subaddresses.
+    :type wallet: ots_handle_t | _CDataBase
+    :param int account: The account number for which to return subaddresses.
+    :param int max: The maximum number of subaddresses to return.
+    :param int offset: The offset from which to start returning subaddresses.
     :return: ots_result_t containing the requested subaddresses.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -3937,16 +4152,29 @@ def ots_wallet_subaddresses(
 def ots_wallet_has_address(
     wallet: ots_handle_t | _CDataBase,
     address: ots_handle_t | _CDataBase,
-    max_account_depth: int,
-    max_index_depth: int
+    max_account_depth: int = 0,
+    max_index_depth: int = 0
 ) -> ots_result_t:
     """
     Checks if the given wallet handle contains the specified address handle.
 
+    .. code-block:: python
+
+        # will search in 1000 addresses, 100 indexes per account, over 10 accounts
+        result: ots_result_t = ots_wallet_has_address(
+            wallet_handle,
+            searched_address_handle,
+            10, 100
+        )
+        found: bool = ots_result_boolean(result)
+        # if the address is e.g. in second account at 200th index, it will return False
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param address: The handle of the address to check.
-    :param max_account_depth: The maximum account depth to consider.
-    :param max_index_depth: The maximum index depth to consider.
+    :type address: ots_handle_t | _CDataBase
+    :param max_account_depth: The maximum account depth to consider. Default is 0, which uses the value returned by `ots_get_max_account_depth(0)`.
+    :param max_index_depth: The maximum index depth to consider. Default is 0, which uses the value returned by `ots_get_max_index_depth(0)`.
     :return: ots_result_t indicating whether the address is present in the wallet.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -3961,16 +4189,23 @@ def ots_wallet_has_address(
 def ots_wallet_has_address_string(
     wallet_handle: ots_handle_t | _CDataBase,
     address: str,
-    max_account_depth: int,
-    max_index_depth: int
+    max_account_depth: int = 0,
+    max_index_depth: int = 0
 ) -> ots_result_t:
     """
     Checks if the given wallet handle contains the specified address string.
 
+    .. code-block:: python
+
+        # will search in 1000 addresses, 100 indexes per account, over 10 accounts
+        result: ots_result_t = ots_wallet_has_address_string(wallet_handle, '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK', 10, 100)
+        found: bool = ots_result_boolean(result)
+
     :param wallet_handle: The handle of the wallet.
-    :param address: The string representation of the address to check.
-    :param max_account_depth: The maximum account depth to consider.
-    :param max_index_depth: The maximum index depth to consider.
+    :type wallet_handle: ots_handle_t | _CDataBase
+    :param str address: The string representation of the address to check.
+    :param int max_account_depth: The maximum account depth to consider. Default is 0, which uses the value returned by `ots_get_max_account_depth(0)`.
+    :param int max_index_depth: The maximum index depth to consider. Default is 0, which uses the value returned by `ots_get_max_index_depth(0)`.
     :return: ots_result_t indicating whether the address is present in the wallet.
     """
     assert isinstance(wallet_handle, (ots_handle_t, _CDataBase)), "wallet_handle must be an instance of ots_handle_t or _CDataBase"
@@ -3984,16 +4219,25 @@ def ots_wallet_has_address_string(
 def ots_wallet_address_index(
     wallet: ots_handle_t | _CDataBase,
     address: ots_handle_t | _CDataBase,
-    max_account_depth: int,
-    max_index_depth: int
+    max_account_depth: int = 0,
+    max_index_depth: int = 0
 ) -> ots_result_t:
     """
     Returns the index of the specified address in the wallet.
 
+    .. code-block:: python
+
+        # will search in 1000 addresses, 100 indexes per account, over 10 accounts
+        result: ots_result_t = ots_wallet_address_index(wallet_handle, searched_address_handle, 10, 100)
+        if ots_result_is_address_index(result):  # The address is found
+            index: tuple[int, int] = (ots_result_address_index_account(result), ots_result_address_index_index(result))
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param address: The handle of the address to find.
-    :param max_account_depth: The maximum account depth to consider.
-    :param max_index_depth: The maximum index depth to consider.
+    :type address: ots_handle_t | _CDataBase
+    :param int max_account_depth: The maximum account depth to consider. Default is 0, which uses the value returned by `ots_get_max_account_depth(0)`.
+    :param int max_index_depth: The maximum index depth to consider. Default is 0, which uses the value returned by `ots_get_max_index_depth(0)`.
     :return: ots_result_t containing the index of the address in the wallet.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4008,16 +4252,24 @@ def ots_wallet_address_index(
 def ots_wallet_address_string_index(
     wallet_handle: ots_handle_t | _CDataBase,
     address: str,
-    max_account_depth: int,
-    max_index_depth: int
+    max_account_depth: int = 0,
+    max_index_depth: int = 0
 ) -> ots_result_t:
     """
     Returns the index of the specified address string in the wallet.
 
+    .. code-block:: python
+
+        # will search in 1000 addresses, 100 indexes per account, over 10 accounts
+        result: ots_result_t = ots_wallet_address_string_index(wallet_handle, '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK', 10, 100)
+        if ots_result_is_address_index(result):  # The address is found
+            index: tuple[int, int] = (ots_result_address_index_account(result), ots_result_address_index_index(result))
+
     :param wallet_handle: The handle of the wallet.
-    :param address: The string representation of the address to find.
-    :param max_account_depth: The maximum account depth to consider.
-    :param max_index_depth: The maximum index depth to consider.
+    :type wallet_handle: ots_handle_t | _CDataBase
+    :param str address: The string representation of the address to find.
+    :param int max_account_depth: The maximum account depth to consider.
+    :param int max_index_depth: The maximum index depth to consider.
     :return: ots_result_t containing the index of the address in the wallet.
     """
     assert isinstance(wallet_handle, (ots_handle_t, _CDataBase)), "wallet_handle must be an instance of ots_handle_t or _CDataBase"
@@ -4032,7 +4284,14 @@ def ots_wallet_secret_view_key(wallet: ots_handle_t | _CDataBase) -> ots_result_
     """
     Returns the secret view key of the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_secret_view_key(wallet_handle)
+        ws_handle: ots_handle_t = ots_result_handle(result)
+        print(ots_wipeable_string_c_string(ws_handle))  # Prints the secret view key of the wallet
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :return: ots_result_t containing the secret view key of the wallet.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4044,7 +4303,14 @@ def ots_wallet_public_view_key(wallet: ots_handle_t | _CDataBase) -> ots_result_
     """
     Returns the public view key of the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_public_view_key(wallet_handle)
+        ws_handle: ots_handle_t = ots_result_handle(result)
+        print(ots_wipeable_string_c_string(ws_handle))  # Prints the public view key of the wallet
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :return: ots_result_t containing the public view key of the wallet.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4056,7 +4322,14 @@ def ots_wallet_secret_spend_key(wallet: ots_handle_t | _CDataBase) -> ots_result
     """
     Returns the secret spend key of the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_secret_spend_key(wallet_handle)
+        ws_handle: ots_handle_t = ots_result_handle(result)
+        print(ots_wipeable_string_c_string(ws_handle))  # Prints the secret spend key of the wallet
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :return: ots_result_t containing the secret spend key of the wallet.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4068,7 +4341,14 @@ def ots_wallet_public_spend_key(wallet: ots_handle_t | _CDataBase) -> ots_result
     """
     Returns the public spend key of the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_public_spend_key(wallet_handle)
+        ws_handle: ots_handle_t = ots_result_handle(result)
+        print(ots_wipeable_string_c_string(ws_handle))  # Prints the public spend key of the wallet
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :return: ots_result_t containing the public spend key of the wallet.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4083,8 +4363,16 @@ def ots_wallet_import_outputs(
     """
     Imports outputs into the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_import_outputs(wallet_handle, output_data)
+        if ots_is_result_success(result):  # export successful
+            imported: int = ots_result_number(result)  # Number of outputs imported
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param outputs: A bytes or string containing the outputs to import.
+    :type outputs: bytes | str
     :return: ots_result_t indicating the result of the import operation.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4099,7 +4387,14 @@ def ots_wallet_export_key_images(wallet: ots_handle_t | _CDataBase) -> ots_resul
     """
     Exports key images from the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_export_key_images(wallet_handle)
+        if ots_is_result(result):  # export successful
+            key_images: bytes = ots_result_char_array(result)  # The exported key images
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :return: ots_result_t containing the exported key images.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4114,8 +4409,15 @@ def ots_wallet_describe_tx(
     """
     Describes a transaction for the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_describe_tx(wallet_handle, unsigned_tx)
+        if ots_is_result(result):  # description parsed successfully
+            description: ots_handle_t = ots_result_handle(result)
+
     :param wallet: The handle of the wallet.
-    :param unsigned_tx: A bytes object containing the unsigned transaction to describe.
+    :type wallet: ots_handle_t | _CDataBase
+    :param bytes unsigned_tx: A bytes object containing the unsigned transaction to describe.
     :return: ots_result_t containing the description of the transaction.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4131,8 +4433,15 @@ def ots_wallet_check_tx(
     """
     Checks a transaction for the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_check_tx(wallet_handle, unsigned_tx_description_handle)
+        tx_warnings: list[ots_handle_t] = ots_result_handle_array(result)  # Warnings from the transaction check
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param unsigned_tx: The handle of the unsigned transaction to check.
+    :type unsigned_tx: ots_handle_t | _CDataBase
     :return: ots_result_t indicating the result of the check operation.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4149,8 +4458,17 @@ def ots_wallet_check_tx_string(
     """
     Checks a transaction for the given wallet handle using a string representation of the unsigned transaction.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_check_tx_string(wallet_handle, unsigned_tx_data)
+        if ots_is_result(result):  # check successful
+            tx_warnings: list[ots_handle_t] = ots_result_handle_array(result)  # Warnings from the transaction check
+        else:  # invalid unsigned_tx
+            print(ots_error_message(result))  # Prints the error message if the unsigned transaction is invalid
+
     :param wallet: The handle of the wallet.
-    :param unsigned_tx: A bytes object containing the unsigned transaction to check.
+    :type wallet: ots_handle_t | _CDataBase
+    :param bytes unsigned_tx: A bytes object containing the unsigned transaction to check.
     :return: ots_result_t indicating the result of the check operation.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4166,8 +4484,15 @@ def ots_wallet_sign_transaction(
     """
     Signs a transaction for the given wallet handle.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_wallet_sign_transaction(wallet_handle, unsigned_tx)
+        if ots_is_result(result):  # signing successful
+            signed_tx: bytes = ots_result_char_array(result)  # The signed transaction
+
     :param wallet: The handle of the wallet.
-    :param unsigned_tx: A bytes object containing the unsigned transaction to sign.
+    :type wallet: ots_handle_t | _CDataBase
+    :param bytes unsigned_tx: A bytes object containing the unsigned transaction to sign.
     :return: ots_result_t containing the signed transaction.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4183,8 +4508,16 @@ def ots_wallet_sign_data(
     """
     Signs data with the given wallet handle.
 
+    .. code-block:: python
+
+        data: str = "Hello, World!"
+        result: ots_result_t = ots_wallet_sign_data(wallet_handle, data)
+        signature: str = ots_result_string(result)  # The signature of the data
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param data: The data to sign.
+    :type data: bytes | str
     :return: ots_result_t containing the signature of the data.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4204,10 +4537,18 @@ def ots_wallet_sign_data_with_index(
     """
     Signs data with the specified account and subaddress in the given wallet handle.
 
+    .. code-block:: python
+
+        data: str = "Hello, World!"
+        result: ots_result_t = ots_wallet_sign_data_with_index(wallet_handle, data, 0, 0)
+        signature: str = ots_result_string(result)  # The signature of the data
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param data: The data to sign.
-    :param account: The account number to use for signing.
-    :param subaddr: The subaddress index to use for signing.
+    :type data: bytes | str
+    :param int account: The account number to use for signing.
+    :param int subaddr: The subaddress index to use for signing.
     :return: ots_result_t containing the signature of the data.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4228,8 +4569,16 @@ def ots_wallet_sign_data_with_address(
     """
     Signs data with the specified address in the given wallet handle.
 
+    .. code-block:: python
+
+        data: str = "Hello, World!"
+        result: ots_result_t = ots_wallet_sign_data_with_address(wallet_handle, data, address_handle)
+        signature: str = ots_result_string(result)  # The signature of the data
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param data: The data to sign.
+    :type data: bytes | str
     :param address: The handle of the address to use for signing.
     :return: ots_result_t containing the signature of the data.
     """
@@ -4251,9 +4600,17 @@ def ots_wallet_sign_data_with_address_string(
     """
     Signs data with the specified address string in the given wallet handle.
 
+    .. code-block:: python
+
+        data: str = "Hello, World!"
+        result: ots_result_t = ots_wallet_sign_data_with_address_string(wallet_handle, data, '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK')
+        signature: str = ots_result_string(result)  # The signature of the data
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param data: The data to sign.
-    :param address: The string representation of the address to use for signing.
+    :type data: bytes | str
+    :param str address: The string representation of the address to use for signing.
     :return: ots_result_t containing the signature of the data.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4270,12 +4627,20 @@ def ots_wallet_verify_data(
     legacy_fallback: bool = False
 ) -> ots_result_t:
     """
-    Verifies the signature of data with the given wallet handle.
+    Verifies the signature of data with the standard address of the given wallet handle.
+
+    .. code-block:: python
+
+        data: str = "Hello, World!"
+        result: ots_result_t = ots_wallet_verify_data(wallet_handle, data, signature)
+        assert ots_result_boolean(result)  # True if the signature is valid, False otherwise
 
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param data: The data whose signature is to be verified.
-    :param signature: The signature to verify.
-    :param legacy_fallback: Whether to use legacy fallback verification.
+    :type data: bytes | str
+    :param str signature: The signature to verify.
+    :param bool legacy_fallback: Whether to use legacy fallback verification.
     :return: ots_result_t indicating the result of the verification.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4299,12 +4664,20 @@ def ots_wallet_verify_data_with_index(
     """
     Verifies the signature of data with the specified account and subaddress in the given wallet handle.
 
+    .. code-block:: python
+
+        data: str = "Hello, World!"
+        result: ots_result_t = ots_wallet_verify_data_with_index(wallet_handle, data, 0, 0, signature)
+        assert ots_result_boolean(result)  # True if the signature is valid, False otherwise
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param data: The data whose signature is to be verified.
-    :param account: The account number to use for verification.
-    :param subaddr: The subaddress index to use for verification.
-    :param signature: The signature to verify.
-    :param legacy_fallback: Whether to use legacy fallback verification.
+    :type data: bytes | str
+    :param int account: The account number to use for verification.
+    :param int subaddr: The subaddress index to use for verification.
+    :param str signature: The signature to verify.
+    :param bool legacy_fallback: Whether to use legacy fallback verification.
     :return: ots_result_t indicating the result of the verification.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4329,11 +4702,20 @@ def ots_wallet_verify_data_with_address(
     """
     Verifies the signature of data with the specified address in the given wallet handle.
 
+    .. code-block:: python
+
+        data: str = "Hello, World!"
+        result: ots_result_t = ots_wallet_verify_data_with_address(wallet_handle, data, address_handle, signature)
+        assert ots_result_boolean(result)  # True if the signature is valid, False otherwise
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param data: The data whose signature is to be verified.
+    :type data: bytes | str
     :param address: The handle of the address to use for verification.
-    :param signature: The signature to verify.
-    :param legacy_fallback: Whether to use legacy fallback verification.
+    :type address: ots_handle_t | _CDataBase
+    :param str signature: The signature to verify.
+    :param bool legacy_fallback: Whether to use legacy fallback verification.
     :return: ots_result_t indicating the result of the verification.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4358,11 +4740,19 @@ def ots_wallet_verify_data_with_address_string(
     """
     Verifies the signature of data with the specified address string in the given wallet handle.
 
+    .. code-block:: python
+
+        data: str = "Hello, World!"
+        result: ots_result_t = ots_wallet_verify_data_with_address_string(wallet_handle, data, '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK', signature)
+        assert ots_result_boolean(result)  # True if the signature is valid, False otherwise
+
     :param wallet: The handle of the wallet.
+    :type wallet: ots_handle_t | _CDataBase
     :param data: The data whose signature is to be verified.
-    :param address: The string representation of the address to use for verification.
-    :param signature: The signature to verify.
-    :param legacy_fallback: Whether to use legacy fallback verification.
+    :type data: bytes | str
+    :param str address: The string representation of the address to use for verification.
+    :param str signature: The signature to verify.
+    :param bool legacy_fallback: Whether to use legacy fallback verification.
     :return: ots_result_t indicating the result of the verification.
     """
     assert isinstance(wallet, (ots_handle_t, _CDataBase)), "wallet must be an instance of ots_handle_t or _CDataBase"
@@ -4382,7 +4772,12 @@ def ots_tx_description(
     """
     Returns the transaction description for the given transaction handle.
 
+    .. code-block:: python
+
+        tx_description: ots_tx_description_t = ots_tx_description(tx_description_handlen)
+
     :param tx_description: The handle of the transaction description.
+    :type tx_description: ots_handle_t | _CDataBase
     :return: ots_tx_description_t containing the transaction description.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4396,7 +4791,12 @@ def ots_tx_description_tx_set(
     """
     Returns the transaction set for the given transaction description handle.
 
+    .. code-block:: python
+
+        tx_set: bytes = ots_tx_description_tx_set(tx_description_handle)
+
     :param tx_description: The handle of the transaction description.
+    :type tx_description: ots_handle_t | _CDataBase
     :return: A string representing the transaction set.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4413,7 +4813,12 @@ def ots_tx_description_tx_set_size(
     """
     Returns the size of the transaction set for the given transaction description handle.
 
+    .. code-block:: python
+
+        tx_set_size: int = ots_tx_description_tx_set_size(tx_description_handle)
+
     :param tx_description: The handle of the transaction description.
+    :type tx_description: ots_handle_t | _CDataBase
     :return: An integer representing the size of the transaction set.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4427,7 +4832,12 @@ def ots_tx_description_amount_in(
     """
     Returns the total amount in for the given transaction description handle.
 
+    .. code-block:: python
+
+        total_amount_in: int = ots_tx_description_amount_in(tx_description_handle)
+
     :param tx_description: The handle of the transaction description.
+    :type tx_description: ots_handle_t | _CDataBase
     :return: An integer representing the total amount in.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4441,7 +4851,12 @@ def ots_tx_description_amount_out(
     """
     Returns the total amount out for the given transaction description handle.
 
+    .. code-block:: python
+
+        total_amount_out: int = ots_tx_description_amount_out(tx_description_handle)
+
     :param tx_description: The handle of the transaction description.
+    :type tx_description: ots_handle_t | _CDataBase
     :return: An integer representing the total amount out.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4455,7 +4870,12 @@ def ots_tx_description_flows_count(
     """
     Returns the number of flows in the given transaction description handle.
 
+    .. code-block:: python
+
+        flows_count: int = ots_tx_description_flows_count(tx_description_handle)
+
     :param tx_description: The handle of the transaction description.
+    :type tx_description: ots_handle_t | _CDataBase
     :return: An integer representing the number of flows.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4470,8 +4890,13 @@ def ots_tx_description_flow_address(
     """
     Returns the address of a flow in the given transaction description handle.
 
+    .. code-block:: python
+
+        address: str = ots_tx_description_flow_address(tx_description_handle, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the flow to retrieve the address for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the flow to retrieve the address for.
     :return: A string representing the address of the flow.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4487,8 +4912,13 @@ def ots_tx_description_flow_amount(
     """
     Returns the amount of a flow in the given transaction description handle.
 
+    .. code-block:: python
+
+        amount: int = ots_tx_description_flow_amount(tx_description_handle, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the flow to retrieve the amount for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the flow to retrieve the amount for.
     :return: An integer representing the amount of the flow.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4503,7 +4933,12 @@ def ots_tx_description_has_change(
     """
     Checks if the given transaction description handle has change.
 
+    .. code-block:: python
+
+        has_change: bool = ots_tx_description_has_change(tx_description_handle)
+
     :param tx_description: The handle of the transaction description.
+    :type tx_description: ots_handle_t | _CDataBase
     :return: True if there is change, False otherwise.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4516,7 +4951,12 @@ def ots_tx_description_change_address(
     """
     Returns the change address for the given transaction description handle.
 
+    .. code-block:: python
+
+        change_address: str | None = ots_tx_description_change_address(tx_description_handle)
+
     :param tx_description: The handle of the transaction description.
+    :type tx_description: ots_handle_t | _CDataBase
     :return: A string representing the change address, or None if there is no change address.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4533,7 +4973,13 @@ def ots_tx_description_change_amount(
     """
     Returns the change amount for the given transaction description handle.
 
+    .. code-block:: python
+
+        if ots_tx_description_has_change(tx_description_handle):
+            change_amount: int = ots_tx_description_change_amount(tx_description_handle)
+
     :param tx_description: The handle of the transaction description.
+    :type tx_description: ots_handle_t | _CDataBase
     :return: An integer representing the change amount.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4547,7 +4993,12 @@ def ots_tx_description_fee(
     """
     Returns the fee for the given transaction description handle.
 
+    .. code-block:: python
+
+        fee: int = ots_tx_description_fee(tx_description_handle)
+
     :param tx_description: The handle of the transaction description.
+    :type tx_description: ots_handle_t | _CDataBase
     :return: An integer representing the fee.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4561,7 +5012,12 @@ def ots_tx_description_transfers_count(
     """
     Returns the number of transfers in the given transaction description handle.
 
+    .. code-block:: python
+
+        transfers_count: int = ots_tx_description_transfers_count(tx_description_handle)
+
     :param tx_description: The handle of the transaction description.
+    :type tx_description: ots_handle_t | _CDataBase
     :return: An integer representing the number of transfers.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4576,8 +5032,16 @@ def ots_tx_description_transfer_amount_in(
     """
     Returns the amount in for a specific transfer in the given transaction description handle.
 
+    .. code-block:: python
+
+        amounts_in: list[int] = [
+            ots_tx_description_transfer_amount_in(tx_description_handle, i)
+            for i in range(ots_tx_description_transfers_count(tx_description_handle))
+        ]
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the amount in for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the amount in for.
     :return: An integer representing the amount in for the transfer.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4593,8 +5057,16 @@ def ots_tx_description_transfer_amount_out(
     """
     Returns the amount out for a specific transfer in the given transaction description handle.
 
+    .. code-block:: python
+
+        amounts_out: list[int] = [
+            ots_tx_description_transfer_amount_out(tx_description_handle, i)
+            for i in range(ots_tx_description_transfers_count(tx_description_handle))
+        ]
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the amount out for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the amount out for.
     :return: An integer representing the amount out for the transfer.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4610,8 +5082,14 @@ def ots_tx_description_transfer_ring_size(
     """
     Returns the ring size for a specific transfer in the given transaction description handle.
 
+    .. code-block:: python
+
+        assert ots_tx_description_transfers_count(tx_description_handle) > 0, "There should be at least one transfer"
+        ring_size: int = ots_tx_description_transfer_ring_size(tx_description_handle, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the ring size for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the ring size for.
     :return: An integer representing the ring size for the transfer.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4627,8 +5105,16 @@ def ots_tx_description_transfer_unlock_time(
     """
     Returns the unlock time for a specific transfer in the given transaction description handle.
 
+    .. attention:: Monero removed the unlocktime, so this function will probably be removed in the future.
+
+    .. code-block:: python
+
+        assert ots_tx_description_transfers_count(tx_description_handle) > 0, "There should be at least one transfer"
+        unlock_time: int = ots_tx_description_transfer_unlock_time(tx_description_handle, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the unlock time for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the unlock time for.
     :return: An integer representing the unlock time for the transfer.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4644,8 +5130,14 @@ def ots_tx_description_transfer_flows_count(
     """
     Returns the number of flows for a specific transfer in the given transaction description handle.
 
+    .. code-block:: python
+
+        assert ots_tx_description_transfers_count(tx_description_handle) > 0, "There should be at least one transfer"
+        flows_count: int = ots_tx_description_transfer_flows_count(tx_description_handle, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the number of flows for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the number of flows for.
     :return: An integer representing the number of flows for the transfer.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4662,9 +5154,16 @@ def ots_tx_description_transfer_flow_address(
     """
     Returns the address of a specific flow in a transfer within the given transaction description handle.
 
+    .. code-block:: python
+
+        assert ots_tx_description_transfers_count(tx_description_handle) > 0, "There should be at least one transfer"
+        assert ots_tx_description_transfer_flows_count(tx_description_handle, 0) > 0, "There should be at least one flow in the transfer"
+        flow_address: str = ots_tx_description_transfer_flow_address(tx_description_handle, 0, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the flow address for.
-    :param flow_index: The index of the flow within the transfer.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the flow address for.
+    :param int flow_index: The index of the flow within the transfer.
     :return: A string representing the address of the flow.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4682,9 +5181,16 @@ def ots_tx_description_transfer_flow_amount(
     """
     Returns the amount of a specific flow in a transfer within the given transaction description handle.
 
+    .. code-block:: python
+
+        assert ots_tx_description_transfers_count(tx_description_handle) > 0, "There should be at least one transfer"
+        assert ots_tx_description_transfer_flows_count(tx_description_handle, 0) > 0, "There should be at least one flow in the transfer"
+        flow_amount: int = ots_tx_description_transfer_flow_amount(tx_description_handle, 0, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the flow amount for.
-    :param flow_index: The index of the flow within the transfer.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the flow amount for.
+    :param int flow_index: The index of the flow within the transfer.
     :return: An integer representing the amount of the flow.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4701,8 +5207,14 @@ def ots_tx_description_transfer_has_change(
     """
     Checks if a specific transfer in the given transaction description handle has change.
 
+    .. code-block:: python
+
+        assert ots_tx_description_transfers_count(tx_description_handle) > 0, "There should be at least one transfer"
+        has_change: bool = ots_tx_description_transfer_has_change(tx_description_handle, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to check for change.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to check for change.
     :return: A boolean indicating whether the transfer has change.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4718,8 +5230,14 @@ def ots_tx_description_transfer_change_address(
     """
     Returns the change address for a specific transfer in the given transaction description handle.
 
+    .. code-block:: python
+
+        assert ots_tx_description_transfers_count(tx_description_handle) > 0, "There should be at least one transfer"
+        change_address: str = ots_tx_description_transfer_change_address(tx_description_handle, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the change address for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the change address for.
     :return: A string representing the change address.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4735,8 +5253,15 @@ def ots_tx_description_transfer_change_amount(
     """
     Returns the change amount for a specific transfer in the given transaction description handle.
 
+    .. code-block:: python
+
+        assert ots_tx_description_transfers_count(tx_description_handle) > 0, "There should be at least one transfer"
+        assert ots_tx_description_transfer_has_change(tx_description_handle, 0), "The transfer should have change"
+        change_amount: int = ots_tx_description_transfer_change_amount(tx_description_handle, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the change amount for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the change amount for.
     :return: An integer representing the change amount.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4752,8 +5277,14 @@ def ots_tx_description_transfer_fee(
     """
     Returns the fee for a specific transfer in the given transaction description handle.
 
+    .. code-block:: python
+
+        assert ots_tx_description_transfers_count(tx_description_handle) > 0, "There should be at least one transfer"
+        fee: int = ots_tx_description_transfer_fee(tx_description_handle, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the fee for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the fee for.
     :return: An integer representing the fee for the transfer.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4806,8 +5337,14 @@ def ots_tx_description_transfer_extra(
     """
     Returns the extra data for a specific transfer in the given transaction description handle.
 
+    .. code-block:: python
+
+        assert ots_tx_description_transfers_count(tx_description_handle) > 0, "There should be at least one transfer"
+        extra_data: bytes = ots_tx_description_transfer_extra(tx_description_handle, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the extra data for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the extra data for.
     :return: A string representing the extra data for the transfer.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4826,8 +5363,14 @@ def ots_tx_description_transfer_extra_size(
     """
     Returns the size of the extra data for a specific transfer in the given transaction description handle.
 
+    .. code-block:: python
+
+        assert ots_tx_description_transfers_count(tx_description_handle) > 0, "There should be at least one transfer"
+        extra_data_size: int = ots_tx_description_transfer_extra_size(tx_description_handle, 0)
+
     :param tx_description: The handle of the transaction description.
-    :param index: The index of the transfer to retrieve the extra data size for.
+    :type tx_description: ots_handle_t | _CDataBase
+    :param int index: The index of the transfer to retrieve the extra data size for.
     :return: An integer representing the size of the extra data for the transfer.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
@@ -4840,9 +5383,27 @@ def ots_seed_jar_add_seed(seed: ots_handle_t | _CDataBase, name: str) -> ots_res
     """
     Adds a seed to the seed jar with the specified name.
 
+    .. code-block:: python
+
+        seed_reference: ots_handle_t = ots_seed_jar_add_seed(seed, "My Seed")
+
+    .. attention::
+
+        In the code example above, the seed (`ots_handle_t*`) has the ownership,
+        which gets transferred to the seed jar. The seed jar sets the original
+        seed handle `ots_handle_t->reference = true;` but the CFFI doesn't reflect
+        this. The returned seed_reference, is exactly the same as the original seed,
+        marked as reference. So it is a good idea (if you want to keep the seed
+        handle) to make simply the following:
+
+        .. code-block:: python
+
+            seed = ots_seed_jar_add_seed(seed, "My Seed")
+
     :param seed: The seed handle to add.
-    :param name: The name to associate with the seed.
-    :return: ots_result_t indicating the result of the operation.
+    :type seed: ots_handle_t | _CDataBase
+    :param str name: The name to associate with the seed.
+    :return: ots_result_t with a reference to the added seed.
     """
     assert isinstance(seed, (ots_handle_t, _CDataBase)), "seed must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(seed).type) == HandleType.SEED, "seed must be of type HandleType.SEED"
@@ -4854,7 +5415,28 @@ def ots_seed_jar_remove_seed(seed: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Removes a seed from the seed jar.
 
+    .. code-block:: python
+
+        seed = ots_seed_jar_add_seed(seed, "My Seed")
+        if ots_seed_jar_remove_seed(seed):  #  The seed is wiped and freed
+            del seed  # Make sure to not use the seed handle anymore
+
+    .. attention::
+
+        Do not use the original seed handle to remove it from the seed jar,
+        and do not use any seed handle after removing it from the seed jar.
+
+        .. code-block:: python
+
+            seed_reference: ots_handle_t = ots_seed_jar_add_seed(seed, "My Seed")
+            # Do not use `seed` anymore anywhere from this point on!
+            #ots_seed_jar_remove_seed(seed)  # DO NOT use `seed` here, use only
+                                            # `seed_reference`
+            ots_seed_jar_remove_seed(seed_reference)
+            # Do not use `seed_reference` anymore anywhere from this point on!
+
     :param seed: The seed handle to remove.
+    :type seed: ots_handle_t | _CDataBase
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(seed, (ots_handle_t, _CDataBase)), "seed must be an instance of ots_handle_t or _CDataBase"
@@ -4866,7 +5448,12 @@ def ots_seed_jar_purge_seed_for_index(index: int) -> ots_result_t:
     """
     Purges a seed from the seed jar based on its index.
 
-    :param index: The index of the seed to purge.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_purge_seed_for_index(0)  # Purges the seed at index 0
+        assert ots_result_boolean(result), "Failed to purge seed at index 0"
+
+    :param int index: The index of the seed to purge.
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -4877,7 +5464,12 @@ def ots_seed_jar_purge_seed_for_name(name: str) -> ots_result_t:
     """
     Purges a seed from the seed jar based on its name.
 
-    :param name: The name of the seed to purge.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_purge_seed_for_name("My Seed")  # Purges the seed with name "My Seed"
+        assert ots_result_boolean(result), "Failed to purge seed with name 'My Seed'"
+
+    :param str name: The name of the seed to purge.
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(name, str), "name must be a string"
@@ -4888,7 +5480,12 @@ def ots_seed_jar_purge_seed_for_fingerprint(fingerprint: str) -> ots_result_t:
     """
     Purges a seed from the seed jar based on its fingerprint.
 
-    :param fingerprint: The fingerprint of the seed to purge.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_purge_seed_for_fingerprint(fingerprint)
+        assert ots_result_boolean(result), "Failed to purge seed with fingerprint"
+
+    :param str fingerprint: The fingerprint of the seed to purge.
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(fingerprint, str), "fingerprint must be a string"
@@ -4899,7 +5496,12 @@ def ots_seed_jar_purge_seed_for_address(address: str) -> ots_result_t:
     """
     Purges a seed from the seed jar based on its address.
 
-    :param address: The address of the seed to purge.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_purge_seed_for_address(str(address))
+        assert ots_result_boolean(result), "Failed to purge seed with address"
+
+    :param str address: The address of the seed to purge.
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(address, str), "address must be a string"
@@ -4913,8 +5515,15 @@ def ots_seed_jar_transfer_seed_in(
     """
     Transfers a seed into the seed jar with the specified name.
 
+    .. code-block:: python
+
+        seed_reference: ots_handle_t = ots_seed_jar_transfer_seed_in(seed, "My Seed")
+
+    .. warning:: Do not use the provided `seed` handle after this operation, the underlying ots_handle_t* is not valid anymore.
+
     :param seed: The seed handle to transfer in.
-    :param name: The name to associate with the seed.
+    :type seed: ots_handle_t | _CDataBase
+    :param str name: The name to associate with the seed.
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(seed, (ots_handle_t, _CDataBase)), "seed must be an instance of ots_handle_t or _CDataBase"
@@ -4931,9 +5540,17 @@ def ots_seed_jar_transfer_seed_in(
 
 def ots_seed_jar_transfer_seed_out(seed: ots_result_t | _CDataBase) -> ots_result_t:
     """
-    Transfers a seed out of the seed jar.
+    Transfers a seed out of the seed jar. This removes the seed from the jar, but different from `ots_seed_jar_purge_seed_for_*` functions, and `ots_seed_jar_remove_seed`, it does not wipe the seed, but transfers the ownership to the returned seed handle.
+
+    .. code-block:: python
+
+        seed_reference: ots_result_t = ots_seed_jar_seed_for_name("My Seed")
+        seed: ots_handle_t = ots_seed_jar_transfer_seed_out(seed_reference)
+        # Do not use `seed_reference` anymore, as the ownership has been transferred to `seed`.
+        # The `seed` handle as now the ownership of the seed.
 
     :param seed: The result of the seed operation to transfer out.
+    :type seed: ots_result_t | _CDataBase
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(seed, (ots_result_t, _CDataBase)), "seed must be an instance of ots_result_t or _CDataBase"
@@ -4942,9 +5559,14 @@ def ots_seed_jar_transfer_seed_out(seed: ots_result_t | _CDataBase) -> ots_resul
 
 def ots_seed_jar_transfer_seed_out_for_index(index: int) -> ots_result_t:
     """
-    Transfers a seed out of the seed jar based on its index.
+    Transfers a seed out of the seed jar based on its index. This removes the seed from the jar, but different from `ots_seed_jar_purge_seed_for_*` functions, and `ots_seed_jar_remove_seed`, it does not wipe the seed, but transfers the ownership to the returned seed handle.
 
-    :param index: The index of the seed to transfer out.
+    .. code-block:: python
+
+        assert ots_seed_jar_seed_count() > 0, "There should be at least one seed in the jar"
+        seed: ots_result_t = ots_seed_jar_transfer_seed_out_for_index(0)  # Transfers the seed at index 0 out of the seed jar
+
+    :param int index: The index of the seed to transfer out.
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -4953,9 +5575,14 @@ def ots_seed_jar_transfer_seed_out_for_index(index: int) -> ots_result_t:
 
 def ots_seed_jar_transfer_seed_out_for_name(name: str) -> ots_result_t:
     """
-    Transfers a seed out of the seed jar based on its name.
+    Transfers a seed out of the seed jar based on its name. This removes the seed from the jar, but different from `ots_seed_jar_purge_seed_for_*` functions, and `ots_seed_jar_remove_seed`, it does not wipe the seed, but transfers the ownership to the returned seed handle.
 
-    :param name: The name of the seed to transfer out.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_transfer_seed_out_for_name("My Seed")
+        seed: ots_handle_t = ots_result_handle(result)
+
+    :param str name: The name of the seed to transfer out.
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(name, str), "name must be a string"
@@ -4964,9 +5591,14 @@ def ots_seed_jar_transfer_seed_out_for_name(name: str) -> ots_result_t:
 
 def ots_seed_jar_transfer_seed_out_for_fingerprint(fingerprint: str) -> ots_result_t:
     """
-    Transfers a seed out of the seed jar based on its fingerprint.
+    Transfers a seed out of the seed jar based on its fingerprint. This removes the seed from the jar, but different from `ots_seed_jar_purge_seed_for_*` functions, and `ots_seed_jar_remove_seed`, it does not wipe the seed, but transfers the ownership to the returned seed handle.
 
-    :param fingerprint: The fingerprint of the seed to transfer out.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_transfer_seed_out_for_fingerprint(fingerprint)
+        seed: ots_handle_t = ots_result_handle(result)
+
+    :param str fingerprint: The fingerprint of the seed to transfer out.
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(fingerprint, str), "fingerprint must be a string"
@@ -4977,7 +5609,12 @@ def ots_seed_jar_transfer_seed_out_for_address(address: str) -> ots_result_t:
     """
     Transfers a seed out of the seed jar based on its address.
 
-    :param address: The address of the seed to transfer out.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_transfer_seed_out_for_address(address)
+        seed: ots_handle_t = ots_result_handle(result)
+
+    :param str address: The address of the seed to transfer out.
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(address, str), "address must be a string"
@@ -4988,6 +5625,11 @@ def ots_seed_jar_clear() -> ots_result_t:
     """
     Clears all seeds from the seed jar.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_clear()
+        assert ots_result_boolean(result), "Failed to clear the seed jar"
+
     :return: ots_result_t indicating the result of the operation.
     """
     return ots_result_t(lib.ots_seed_jar_clear())
@@ -4996,6 +5638,11 @@ def ots_seed_jar_clear() -> ots_result_t:
 def ots_seed_jar_seeds() -> ots_result_t:
     """
     Returns all seeds in the seed jar.
+
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_seeds()
+        seeds: list[ots_handle_t] = ots_result_handle_array_reference(result)
 
     :return: ots_result_t containing the list of seeds.
     """
@@ -5006,11 +5653,17 @@ def ots_seed_jar_seed_count() -> ots_result_t:
     """
     Returns the count of seeds in the seed jar.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_seed_count()
+        seed_count: int = ots_result_number(result)
+
     :return: ots_result_t containing the count of seeds.
     """
     return ots_result_t(lib.ots_seed_jar_seed_count())
 
 
+# TODO: continue here
 def ots_seed_jar_seed_for_index(index: int) -> ots_result_t:
     """
     Returns a seed from the seed jar based on its index.
@@ -5298,10 +5951,8 @@ def ots_check_low_entropy(
     :return: ots_result_t indicating whether the data has low entropy.
     """
     assert isinstance(data, bytes), "data must be a bytes object"
-    assert isinstance(size, int), "size must be an integer"
-    assert size >= 0, "size must be a non-negative integer"
     assert isinstance(min_entropy, float), "min_entropy must be a float"
-    return ots_result_t(lib.ots_check_low_entropy(ffi.cast('uint8_t *', data), len(data), min_entropy))
+    return ots_result_t(lib.ots_check_low_entropy(data, len(data), min_entropy))
 
 
 def ots_entropy_level(data: bytes) -> ots_result_t:
@@ -5382,7 +6033,7 @@ def ots_get_max_account_depth(default: int = 0) -> int:
     """
     Returns the maximum account default.
 
-    :param default: The current account default.
+    :param int default: The current account default. If set to 0, it will return the library's default value, if not set.
     :return: An integer representing the maximum account default.
     """
     assert isinstance(default, int), "default must be an integer"
@@ -5394,7 +6045,7 @@ def ots_get_max_index_depth(default: int = 0) -> int:
     """
     Returns the maximum index depth.
 
-    :param default: The default return default if values are not set.
+    :param int default: The default return default if values are not set. If set to 0, it will return the library's default value, if not set.
     :return: An integer representing the maximum index depth.
     """
     assert isinstance(default, int), "depth must be an integer"
@@ -5405,7 +6056,7 @@ def ots_get_max_index_depth(default: int = 0) -> int:
 def ots_verify_data(
     data: bytes | str,
     address: str,
-    signature: str
+    signature: str | bytes
 ) -> ots_result_t:
     """
     Verifies the provided data against the given address and signature.
@@ -5417,7 +6068,9 @@ def ots_verify_data(
     """
     assert isinstance(data, (bytes, str)), "data must be bytes or a string"
     assert isinstance(address, str), "address must be a string"
-    assert isinstance(signature, str), "signature must be a string"
+    assert isinstance(signature, (str, bytes)), "signature must be a string or bytes"
     if isinstance(data, str):
         data = data.encode('utf-8')
-    return ots_result_t(lib.ots_verify_data(data, len(data), address.encode('utf-8'), signature.encode('utf-8')))
+    if isinstance(signature, str):
+        signature = signature.encode('utf-8')
+    return ots_result_t(lib.ots_verify_data(data, len(data), address.encode('utf-8'), signature))

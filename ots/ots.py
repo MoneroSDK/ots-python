@@ -110,7 +110,7 @@ class Ots:
         result: ots_result_t = ots_check_low_entropy(data, minEntropy)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return ots_result_bool(result)
+        return ots_result_boolean(result)
 
     @staticmethod
     def setEnforceEntropy(enforce: bool = True) -> None:
@@ -124,9 +124,7 @@ class Ots:
         :param bool enforce: Whether to enforce minimum entropy.
         """
         assert isinstance(enforce, bool), "Enforce must be a boolean."
-        result: ots_result_t = ots_set_enforce_entropy(enforce)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
+        ots_set_enforce_entropy(enforce)
 
     @staticmethod
     def setEnforceEntropyLevel(minEntropy: float) -> None:  # TODO: should set OTS_MIN_ENTROPY as default (from where to take?)
@@ -140,10 +138,7 @@ class Ots:
         :param float minEntropy: The minimum entropy threshold.
         """
         assert isinstance(minEntropy, float), "Minimum entropy must be a number."
-        result: ots_result_t = ots_set_enforce_entropy_level(minEntropy)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
-        return ots_result_bool(result)
+        ots_set_enforce_entropy_level(minEntropy)
 
     @staticmethod
     def setMaxAccountDepth(depth: int) -> None:
@@ -156,9 +151,7 @@ class Ots:
         """
         assert isinstance(depth, int), "Depth must be an integer."
         assert depth >= 0, "Depth must be a non-negative integer."
-        result: ots_result_t = ots_set_max_account_depth(depth)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
+        ots_set_max_account_depth(depth)
 
     @staticmethod
     def setMaxIndexDepth(depth: int) -> None:
@@ -171,9 +164,7 @@ class Ots:
         """
         assert isinstance(depth, int), "Depth must be an integer."
         assert depth >= 0, "Depth must be a non-negative integer."
-        result: ots_result_t = ots_set_max_index_depth(depth)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
+        ots_set_max_index_depth(depth)
 
     @staticmethod
     def setMaxDepth(accountDepth: int, indexDepth: int) -> None:
@@ -197,9 +188,7 @@ class Ots:
         assert accountDepth >= 0, "Account depth must be a non-negative integer."
         assert isinstance(indexDepth, int), "Index depth must be an integer."
         assert indexDepth >= 0, "Index depth must be a non-negative integer."
-        result: ots_result_t = ots_set_max_depth(accountDepth, indexDepth)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
+        ots_set_max_depth(accountDepth, indexDepth)
 
     @staticmethod
     def resetMaxDepth() -> None:
@@ -213,9 +202,7 @@ class Ots:
             and `DEFAULT_MAX_INDEX_DEPTH`, which by time of writing
             are 10 and 100 respectively.
         """
-        result: ots_result_t = ots_reset_max_depth()
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
+        ots_reset_max_depth()
 
     @staticmethod
     def maxAccountDepth(default: int = 0) -> int:
@@ -261,13 +248,9 @@ class Ots:
         assert isinstance(data, (bytes, str)), "Data must be a byte string or a string."
         assert isinstance(signature, (bytes, str)), "Signature must be a byte string or a string."
         assert isinstance(address, (Address, str)), "Address must be an instance of Address or a string."
-        if isinstance(data, str):
-            data = data.encode('utf-8')
-        if isinstance(signature, str):
-            signature = signature.encode('utf-8')
         if isinstance(address, Address):
             address = str(address)
-        result: ots_result_t = ots_verify_data(data, address.encode('utf-8'), signature)
+        result: ots_result_t = ots_verify_data(data, address, signature)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return ots_result_bool(result)
+        return ots_result_boolean(result)

@@ -68,18 +68,13 @@ class SeedIndices:
         """
         :return: The number of seed indices.
         """
-        result: ots_result_t = ots_seed_indices_count(self.handle)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
-        return ots_result_uint32(result)
+        return ots_seed_indices_count(self.handle)
 
     def clear(self) -> None:
         """
         Clear the seed indices.
         """
-        result: ots_result_t = ots_seed_indices_clear(self.handle)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
+        ots_seed_indices_clear(self.handle)
 
     def append(self, value: int) -> None:
         """
@@ -88,9 +83,7 @@ class SeedIndices:
         :param int value: The seed index to append.
         """
         assert isinstance(value, int), "value must be an integer"
-        result: ots_result_t = ots_seed_indices_append(self.handle, value)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
+        ots_seed_indices_append(self.handle, value)
 
     def numeric(self, separator: str = '') -> str:
         """
@@ -100,10 +93,7 @@ class SeedIndices:
         :return: A numeric string representation of the seed indices.
         """
         assert isinstance(separator, str), "separator must be of type str"
-        result: ots_result_t = ots_seed_indices_numeric(self.handle, separator)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
-        return ots_result_string(result)
+        return ots_seed_indices_numeric(self.handle, separator)
 
     def hex(self, separator: str = '') -> str:
         """
@@ -113,10 +103,7 @@ class SeedIndices:
         :return: A hex string representation of the seed indices.
         """
         assert isinstance(separator, str), "separator must be of type str"
-        result: ots_result_t = ots_seed_indices_hex(self.handle, separator)
-        if ots_is_error(result):
-            raise OtsException.from_result(result)
-        return ots_result_string(result)
+        return ots_seed_indices_hex(self.handle, separator)
 
     @classmethod
     def fromValues(cls, values: list[int]) -> 'SeedIndices':

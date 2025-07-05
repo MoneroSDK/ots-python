@@ -7,6 +7,5 @@ the :py:class:`ots.seed_language.SeedLanguage` class provides a way to manage th
 .. automodule:: ots.seed_language
    :members:
    :member-order: bysource
-   :special-members:
-   :exclude-members: __weakref__
+   :special-members: __str__
 

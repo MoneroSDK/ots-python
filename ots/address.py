@@ -78,7 +78,7 @@ class Address:
         result: ots_result_t = ots_address_type(self.handle)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        self._type = AddressType(ots_result_integer(result))
+        self._type = ots_result_address_type(result)
         return self._type
 
     @property
@@ -91,7 +91,7 @@ class Address:
         result: ots_result_t = ots_address_network(self.handle)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        self._network = Network(ots_result_integer(result))
+        self._network = ots_result_network(result)
         return self._network
 
     @property
@@ -164,7 +164,7 @@ class Address:
         result: ots_result_t = ots_address_length(self.handle)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        self._length = ots_result_integer(result)
+        self._length = ots_result_number(result)
         return self._length
 
     @classmethod
@@ -178,7 +178,7 @@ class Address:
         result: ots_result_t = ots_address_create(address)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return cls(handle)
+        return cls(ots_result_handle(result))
 
     @classmethod
     def fromIntegrated(cls, address: 'Address') -> 'Address':
@@ -188,11 +188,11 @@ class Address:
         :param Address address: The integrated address.
         :return: An Address object.
         """
-        assert address.isIntegrated(), "address must be an integrated address"
+        assert address.isIntegrated, "address must be an integrated address"
         result: ots_result_t = ots_address_from_integrated(address.handle)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return cls(handle)
+        return cls(ots_result_handle(result))
 
 
 class AddressString:
@@ -212,14 +212,16 @@ class AddressString:
     """
 
     @classmethod
-    def valid(cls, address: str) -> bool:
+    def valid(cls, address: str, network: Network | int) -> bool:
         """
         Checks if the given address string is a valid Monero address.
 
         :param str address: The address string to validate.
+        :param network: The network to validate against.
+        :type network: Network | int
         :return: True if the address is valid, False otherwise.
         """
-        result: ots_result_t = ots_address_valid(address)
+        result: ots_result_t = ots_address_string_valid(address, network)
         if ots_is_error(result):
             raise OtsException.from_result(result)
         return ots_result_boolean(result)
@@ -235,7 +237,7 @@ class AddressString:
         result: ots_result_t = ots_address_string_network(address)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return Network(ots_result_integer(result))
+        return ots_result_network(result)
 
     @classmethod
     def type(cls, address: str) -> AddressType:
@@ -248,7 +250,7 @@ class AddressString:
         result: ots_result_t = ots_address_string_type(address)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return AddressType(ots_result_integer(result))
+        return ots_result_address_type(result)
 
     @classmethod
     def fingerprint(cls, address: str) -> str:

@@ -14,4 +14,4 @@ SeedIndices
    :members:
    :member-order: bysource
    :special-members:
-   :exclude-members: __weakref__
+   :exclude-members: __weakref__, __init__
