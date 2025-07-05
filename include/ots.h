@@ -831,6 +831,13 @@ extern "C" {
     bool ots_result_is_address_type(const ots_result_t* result);
 
     /**
+     * @brief Get the address type from result
+     * @param[in] result Result to check
+     * @return Address type
+     */
+    OTS_ADDRESS_TYPE ots_result_address_type(const ots_result_t* result);
+
+    /**
      * @brief Check if result is a specific address type
      * @param[in] result Result to check
      * @param[in] type Address type to check for
@@ -1583,6 +1590,16 @@ extern "C" {
         OTS_NETWORK network,
         const char* password,
         const char* passphrase
+    );
+
+    /*
+     * @brief Convert Polyseed to MoneroSeed
+     * @param[in] polyseed Polyseed handle
+     *
+     * @return Result containing MoneroSeed handle
+     */
+    ots_result_t* ots_polyseed_convert_to_monero_seed(
+        const ots_handle_t* polyseed
     );
 
     /*******************************************************************************
