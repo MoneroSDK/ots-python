@@ -1,13 +1,19 @@
 # Running Tests
 
-You must install the test-runner dependencies:
+Best create a virtual environment for the tests:
 ```
-pip3 install -r tests/requirements.txt
+python -m venv .test_venv
+source .test_venv/bin/activate
 ```
 
-Then make the `seedsigner` python module visible/importable to the tests by installing it:
+Install the test-runner dependencies:
 ```
-pip3 install -e .
+pip install -r tests/requirements.txt
+```
+
+Then make the `ots` python module visible/importable to the tests by installing it:
+```
+pip install -e .
 ```
 
 Run the whole test suite:
@@ -23,4 +29,9 @@ pytest tests/test_this_file.py
 Run a specific test:
 ```
 pytest tests/test_this_file.py::test_this_specific_test
+```
+
+Exit virtual environment:
+```
+deactivate
 ```
