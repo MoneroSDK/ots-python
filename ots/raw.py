@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from _cffi_backend import _CDataBase
 from ._ots import ffi, lib
 from .enums import *
@@ -118,12 +119,77 @@ class ots_handle_t(_opaque_handle_t):
         """
         return HandleType(self.ptr.type)
 
+
+@dataclass
+class ots_flow_vector_t:
+    """
+    Represents a flow vector `ots_flow_vector_t` in OTS, in a pythonic way.
+    """
+    address: str = ''
+    amount: int = 0
+
+
+@dataclass
+class ots_transfer_description_t:
+    """
+    Represents a transfer description `ots_transfer_description_t` in OTS, in a pythonic way.
+    """
+    amount_in: int = 0
+    amount_out: int = 0
+    ring_size: int = 0
+    unlock_time: int = 0
+    flows: list[ots_flow_vector_t] = field(default_factory=list)
+    change: ots_flow_vector_t | None = None
+    fee: int = 0
+    payment_id: str | None = None
+    dummy_outputs: int = 0
+    tx_extra: str | None = None
+
+
 class ots_tx_description_t(_opaque_handle_t):
     """
-    Represents a transaction description in OTS.
+    Represents a transaction description struct `ots_tx_description_t` in OTS, in a pythonic way.
+
+    ... note::
+
+        The underlaying C data type is not cached and on each access the C data type is accessed again.
+        But the resource impact should be still low, how it is only a lightweight wrapper around the C ABI struct.
+
+    An example of a sequential usage of this class with minimal impact on the performance is:
+
+    .. code-block:: python
+
+        desc: ots_description_t = ots_tx_description_t(tx_description_handle)
+        print(f'tx set: {desc.tx_set}')
+        print(f'amount in: {desc.amount_in}')
+        print(f'amount out: {desc.amount_out}')
+        for flow in desc.flows:
+            print(f'flow: {flow.address}: {flow.amount}')
+        if desc.change:
+            print(f'change: {desc.change.address}: {desc.change.amount}')
+        else:
+            print('no change in transaction')
+        print(f'fee: {desc.fee}')
+        for transfer in desc.transfers:
+            print(f'\tTransfer:\n\t\tamount in: {transfer.amount_in}\n\t\tamount out: {transfer.amount_out}\n\t\tring size: {transfer.ring_size}\n\t\tunlock time: {transfer.unlock_time}\n\t\tflows:')
+            for flow in transfer.flows:
+                print(f'\t\t\t{flow.address}: {flow.amount}')
+            if transfer.change:
+                print(f'\t\tChange: {transfer.change.address}: {transfer.change.amount}')
+            else:
+                print('\t\tNo change in transfer')
+            print(f'\t\tfee: {transfer.fee}')
+            if transfer.payment_id:
+                print(f'\t\tpayment ID: {transfer.payment_id}')
+            print(f'\t\tdummy outputs: {transfer.dummy_outputs}')
+            if transfer.tx_extra:
+                print(f'\t\tTX Extra: {transfer.tx_extra}')
+
+    If used with random access it would properties of the transfers.
     """
 
     def __init__(self, description: _CDataBase):
+        assert ffi.typeof(description) == ffi.typeof('ots_tx_description_t *'), "description must be of type ots_tx_description_t *"
         self.ptrptr = ffi.new('ots_tx_description_t **')
         self.ptrptr[0] = description
 
@@ -134,6 +200,93 @@ class ots_tx_description_t(_opaque_handle_t):
         if self.ptrptr:
             lib.ots_free_tx_description(self.ptrptr)
             ffi.release(self.ptrptr)
+
+    @property
+    def tx_set(self) -> bytes:
+        """
+        Returns the transaction set as bytes.
+        This is a byte representation of the unsigned transaction set.
+        """
+        return ffi.buffer(self.ptr.tx_set, self.ptr.tx_set_size)
+
+    @property
+    def amount_in(self) -> int:
+        """
+        Returns the amount in the transaction description.
+        This is the total amount of the transaction.
+        """
+        return self.ptr.amount_in
+
+    @property
+    def amount_out(self) -> int:
+        """
+        Returns the amount out in the transaction description.
+        This is the total amount sent in the transaction.
+        """
+        return self.ptr.amount_out
+
+    @property
+    def flows(self) -> list[ots_flow_vector_t]:
+        """
+        Returns the flows in the transaction description.
+        This is a list of addresses and their corresponding amounts in the transaction.
+        """
+        return [
+            ots_flow_vector_t(
+                ffi.string(self.ptr.flows[i].address).decode('utf-8'),
+                self.ptr.flows[i].amount
+            )
+            for i in range(self.ptr.flows_size)
+        ]
+
+    @property
+    def change(self) -> ots_flow_vector_t | None:
+        """
+        Returns the change in the transaction description.
+        This is a tuple of the address and the amount of the change.
+        If there is no change, it returns None.
+        """
+        if self.ptr.change_address == ffi.NULL or self.ptr.change_amount == 0:
+            return None
+        return ots_flow_vector_t(
+            ffi.string(self.ptr.change_address).decode('utf-8'),
+            self.ptr.change_amount
+        )
+
+    @property
+    def fee(self) -> int:
+        """
+        Returns the fee in the transaction description.
+        This is the total fee of the transaction.
+        """
+        return self.ptr.fee
+
+    @property
+    def transfers(self) -> list[ots_transfer_description_t]:
+        return [
+            ots_transfer_description_t(
+                self.ptr.transfers[i].amount_in,
+                self.ptr.transfers[i].amount_out,
+                self.ptr.transfers[i].ring_size,
+                self.ptr.transfers[i].unlock_time,
+                [
+                    ots_flow_vector_t(
+                        ffi.string(self.ptr.transfers[i].flows[j].address).decode('utf-8'),
+                        self.ptr.transfers[i].flows[j].amount
+                    )
+                ],
+                ots_flow_vector_t(
+                    self.transfers[i].change_address.decode('utf-8'),
+                    self.transfers[i].change_amount
+                ) if self.transfers[i].change_address != ffi.NULL and self.transfers[i].change_amount > 0 else None,
+                self.ptr.transfers[i].fee,
+                ffi.string(self.ptr.transfers[i].payment_id).decode('utf-8') if self.ptr.transfers[i].payment_id != ffi.NULL else None,
+                self.ptr.transfers[i].dummy_outputs,
+                ffi.string(self.ptr.transfers[i].tx_extra).decode('utf-8') if self.ptr.transfers[i].tx_extra != ffi.NULL else None
+
+            )
+            for i in range(self.ptr.transfers_size)
+        ]
 
 
 def _unwrap(
@@ -5663,12 +5816,18 @@ def ots_seed_jar_seed_count() -> ots_result_t:
     return ots_result_t(lib.ots_seed_jar_seed_count())
 
 
-# TODO: continue here
 def ots_seed_jar_seed_for_index(index: int) -> ots_result_t:
     """
-    Returns a seed from the seed jar based on its index.
+    Returns a seed handle reference from the seed jar based on its index.
 
-    :param index: The index of the seed to retrieve.
+    .. code-block:: Python
+
+        assert ots_seed_jar_seed_count() > 0, "There should be at least one seed in the jar"
+        result: ots_result_t = ots_seed_jar_seed_for_index(0)  # Retrieves the seed at index 0
+        if ots_is_result(result):
+            seed_reference: ots_handle_t = ots_result_handle(result)
+
+    :param int index: The index of the seed to retrieve.
     :return: ots_result_t containing the seed.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5677,9 +5836,15 @@ def ots_seed_jar_seed_for_index(index: int) -> ots_result_t:
 
 def ots_seed_jar_seed_for_fingerprint(fingerprint: str) -> ots_result_t:
     """
-    Returns a seed from the seed jar based on its fingerprint.
+    Returns a seed handle reference from the seed jar based on its fingerprint.
 
-    :param fingerprint: The fingerprint of the seed to retrieve.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_seed_for_fingerprint(fingerprint)
+        if ots_is_result(result):
+            seed_reference: ots_handle_t = ots_result_handle(result)
+
+    :param str fingerprint: The fingerprint of the seed to retrieve.
     :return: ots_result_t containing the seed.
     """
     assert isinstance(fingerprint, str), "fingerprint must be a string"
@@ -5688,9 +5853,15 @@ def ots_seed_jar_seed_for_fingerprint(fingerprint: str) -> ots_result_t:
 
 def ots_seed_jar_seed_for_address(address: str) -> ots_result_t:
     """
-    Returns a seed from the seed jar based on its address.
+    Returns a seed handle reference from the seed jar based on its address.
 
-    :param address: The address of the seed to retrieve.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_seed_for_address(address)
+        if ots_is_result(result):
+            seed_reference: ots_handle_t = ots_result_handle(result)
+
+    :param str address: The address of the seed to retrieve.
     :return: ots_result_t containing the seed.
     """
     assert isinstance(address, str), "address must be a string"
@@ -5699,9 +5870,15 @@ def ots_seed_jar_seed_for_address(address: str) -> ots_result_t:
 
 def ots_seed_jar_seed_for_name(name: str) -> ots_result_t:
     """
-    Returns a seed from the seed jar based on its name.
+    Returns a seed handle reference from the seed jar based on its name.
 
-    :param name: The name of the seed to retrieve.
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_seed_for_name("My Seed")
+        if ots_is_result(result):
+            seed_reference: ots_handle_t = ots_result_handle(result)
+
+    :param str name: The name of the seed to retrieve.
     :return: ots_result_t containing the seed.
     """
     assert isinstance(name, str), "name must be a string"
@@ -5712,7 +5889,14 @@ def ots_seed_jar_seed_name(seed: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     Returns the name of the specified seed in the seed jar.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_seed_name(seed_reference)
+        if ots_is_result(result):
+            seed_name: str = ots_result_string(result)
+
     :param seed: The handle of the seed.
+    :type seed: ots_handle_t | _CDataBase
     :return: ots_result_t containing the name of the seed.
     """
     assert isinstance(seed, (ots_handle_t, _CDataBase)), "seed must be an instance of ots_handle_t or _CDataBase"
@@ -5727,8 +5911,15 @@ def ots_seed_jar_seed_rename(
     """
     Renames the specified seed in the seed jar.
 
+    .. code-block:: python
+
+        result: ots_result_t = ots_seed_jar_seed_rename(seed_reference, "New Seed Name")
+        if ots_is_result(result):  # no error means it is a success
+            assert ots_result_boolean(result), "Failed to rename the seed"  # returns True
+
     :param seed: The handle of the seed to rename.
-    :param name: The new name for the seed.
+    :type seed: ots_handle_t | _CDataBase
+    :param str name: The new name for the seed.
     :return: ots_result_t indicating the result of the operation.
     """
     assert isinstance(seed, (ots_handle_t, _CDataBase)), "seed must be an instance of ots_handle_t or _CDataBase"
@@ -5741,7 +5932,13 @@ def ots_seed_jar_item_name(index: int) -> ots_result_t:
     """
     Returns the name of the seed jar item at the specified index.
 
-    :param index: The index of the seed jar item.
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_name(0)  # Retrieves the name of the seed jar item at index 0
+        name: str = ots_result_string(result)
+
+    :param int index: The index of the seed jar item.
     :return: ots_result_t containing the name of the seed jar item.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5752,7 +5949,13 @@ def ots_seed_jar_item_fingerprint(index: int) -> ots_result_t:
     """
     Returns the fingerprint of the seed jar item at the specified index.
 
-    :param index: The index of the seed jar item.
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_fingerprint(0)  # Retrieves the fingerprint of the seed jar item at index 0
+        fingerprint: str = ots_result_string(result)
+
+    :param int index: The index of the seed jar item.
     :return: ots_result_t containing the fingerprint of the seed jar item.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5761,9 +5964,15 @@ def ots_seed_jar_item_fingerprint(index: int) -> ots_result_t:
 
 def ots_seed_jar_item_address(index: int) -> ots_result_t:
     """
-    Returns the address of the seed jar item at the specified index.
+    Returns the address handle of the seed jar item at the specified index.
 
-    :param index: The index of the seed jar item.
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_address(0)  # Retrieves the address of the seed jar item at index 0
+        address: ots_handle_t = ots_result_handle(result)
+
+    :param int index: The index of the seed jar item.
     :return: ots_result_t containing the address of the seed jar item.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5774,7 +5983,13 @@ def ots_seed_jar_item_address_string(index: int) -> ots_result_t:
     """
     Returns the address string of the seed jar item at the specified index.
 
-    :param index: The index of the seed jar item.
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_address_string(0)  # Retrieves the address string of the seed jar item at index 0
+        address_string: str = ots_result_string(result)
+
+    :param int index: The index of the seed jar item.
     :return: ots_result_t containing the address string of the seed jar item.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5785,7 +6000,13 @@ def ots_seed_jar_item_seed_type(index: int) -> ots_result_t:
     """
     Returns the seed type of the seed jar item at the specified index.
 
-    :param index: The index of the seed jar item.
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_seed_type(0)  # Retrieves the seed type of the seed jar item at index 0
+        seed_type: SeedType = ots_result_seed_type(result)
+
+    :param int index: The index of the seed jar item.
     :return: ots_result_t containing the seed type of the seed jar item.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5796,7 +6017,13 @@ def ots_seed_jar_item_seed_type_string(index: int) -> ots_result_t:
     """
     Returns the seed type string of the seed jar item at the specified index.
 
-    :param index: The index of the seed jar item.
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_seed_type_string(0)  # Retrieves the seed type string of the seed jar item at index 0
+        seed_type: str = ots_result_string(result)
+
+    :param int index: The index of the seed jar item.
     :return: ots_result_t containing the seed type string of the seed jar item.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5807,7 +6034,13 @@ def ots_seed_jar_item_is_legacy(index: int) -> ots_result_t:
     """
     Checks if the seed jar item at the specified index is a legacy item.
 
-    :param index: The index of the seed jar item.
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_is_legacy(0)  # Checks if the seed jar item at index 0 is legacy
+        legacy: bool = ots_result_boolean(result)
+
+    :param int index: The index of the seed jar item.
     :return: ots_result_t indicating whether the item is legacy.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5818,7 +6051,13 @@ def ots_seed_jar_item_network(index: int) -> ots_result_t:
     """
     Returns the network of the seed jar item at the specified index.
 
-    :param index: The index of the seed jar item.
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_network(0)  # Retrieves the network of the seed jar item at index 0
+        network: Network = ots_result_network(result)
+
+    :param int index: The index of the seed jar item.
     :return: ots_result_t containing the network of the seed jar item.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5829,7 +6068,13 @@ def ots_seed_jar_item_network_string(index: int) -> ots_result_t:
     """
     Returns the network string of the seed jar item at the specified index.
 
-    :param index: The index of the seed jar item.
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_network_string(0)  # Retrieves the network string of the seed jar item at index 0
+        network: str = ots_result_string(result)
+
+    :param int index: The index of the seed jar item.
     :return: ots_result_t containing the network string of the seed jar item.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5840,7 +6085,13 @@ def ots_seed_jar_item_height(index: int) -> ots_result_t:
     """
     Returns the height of the seed jar item at the specified index.
 
-    :param index: The index of the seed jar item.
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_height(0)  # Retrieves the height of the seed jar item at index 0
+        height: int = ots_result_number(result)
+
+    :param int index: The index of the seed jar item.
     :return: ots_result_t containing the height of the seed jar item.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5851,7 +6102,13 @@ def ots_seed_jar_item_timestamp(index: int) -> ots_result_t:
     """
     Returns the timestamp of the seed jar item at the specified index.
 
-    :param index: The index of the seed jar item.
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_timestamp(0)  # Retrieves the timestamp of the seed jar item at index 0
+        timestamp: int = ots_result_number(result)
+
+    :param int index: The index of the seed jar item.
     :return: ots_result_t containing the timestamp of the seed jar item.
     """
     assert isinstance(index, int), "index must be an integer"
@@ -5862,6 +6119,12 @@ def ots_seed_jar_item_wallet(index: int) -> ots_result_t:
     """
     Returns the wallet associated with the seed jar item at the specified index.
 
+    .. code-block:: python
+
+        assert ots_seed_jar_item_count() > 0, "There should be at least one seed jar item"
+        result: ots_result_t = ots_seed_jar_item_wallet(0)  # Retrieves the wallet of the seed jar item at index 0
+        wallet: ots_handle_t = ots_result_handle(result)
+
     :param index: The index of the seed jar item.
     :return: ots_result_t containing the wallet of the seed jar item.
     """
@@ -5871,14 +6134,25 @@ def ots_seed_jar_item_wallet(index: int) -> ots_result_t:
 
 def ots_version() -> ots_result_t:
     """
-    Returns the version of the OTS library.
+    Returns the version of the OTS library as string with the format "major.minor.patch".
+
+    ... code-block:: python
+
+        version: ots_result_t = ots_version()
+
+    :return: ots_result_t containing the version string.
     """
     return ots_result_t(lib.ots_version())
 
 
 def ots_version_components() -> ots_result_t:
     """
-    Returns the version components of the OTS library.
+    Returns the version components as int array of the OTS library.
+
+    ... code-block:: python
+
+        result: ots_result_t = ots_version_components()
+        version: list[int] = ots_result_int_array(result)
 
     :return: ots_result_t contains tuple containing the major, minor, and patch version numbers.
     """
@@ -5892,8 +6166,14 @@ def ots_height_from_timestamp(
     """
     Returns the height corresponding to a given timestamp and network.
 
-    :param timestamp: The timestamp to convert.
+    .. code-block:: python
+
+        result: ots_result_t = ots_height_from_timestamp(1633036800, Network.MAIN)
+        height: int = ots_result_number(result)
+
+    :param int timestamp: The timestamp to convert.
     :param network: The network for which to calculate the height.
+    :type network: Network | int
     :return: ots_result_t containing the height.
     """
     assert isinstance(timestamp, int), "timestamp must be an integer"
@@ -5909,8 +6189,14 @@ def ots_timestamp_from_height(
     """
     Returns the timestamp corresponding to a given height and network.
 
-    :param height: The height to convert.
+    .. code-block:: python
+
+        result: ots_result_t = ots_timestamp_from_height(1000, Network.MAIN)
+        timestamp: int = ots_result_number(result)
+
+    :param int height: The height to convert.
     :param network: The network for which to calculate the timestamp.
+    :type network: Network | int
     :return: ots_result_t containing the timestamp.
     """
     assert isinstance(height, int), "height must be an integer"
@@ -5923,7 +6209,12 @@ def ots_random_bytes(size: int) -> ots_result_t:
     """
     Returns a random byte string of the specified size.
 
-    :param size: The number of random bytes to generate.
+    .. code-block:: python
+
+        result: ots_result_t = ots_random_bytes(32)
+        random: bytes = ots_result_char_array(result)
+
+    :param int size: The number of random bytes to generate.
     :return: A byte string containing the random bytes.
     """
     assert isinstance(size, int), "size must be an integer"
@@ -5934,6 +6225,13 @@ def ots_random_bytes(size: int) -> ots_result_t:
 def ots_random_32() -> ots_result_t:
     """
     Returns a random 32-byte string.
+
+    .. code-block:: python
+
+        result: ots_result_t = ots_random_32()
+        random: bytes = ots_result_char_array(result)
+
+    :return: ots_result_t containing a random 32-byte string.
     """
     return ots_result_t(lib.ots_random_32())
 
@@ -5945,9 +6243,13 @@ def ots_check_low_entropy(
     """
     Checks if the provided data has low entropy.
 
-    :param data: The data to check.
-    :param size: The size of the data in bytes.
-    :param min_entropy: The minimum entropy level to consider.
+    ... code-block:: python
+
+        result: ots_result_t = ots_check_low_entropy(data, 3.5)
+        low_entropy: bool = ots_result_boolean(result)
+
+    :param bytes data: The data to check.
+    :param float min_entropy: The minimum entropy level to consider.
     :return: ots_result_t indicating whether the data has low entropy.
     """
     assert isinstance(data, bytes), "data must be a bytes object"
@@ -5958,6 +6260,11 @@ def ots_check_low_entropy(
 def ots_entropy_level(data: bytes) -> ots_result_t:
     """
     Returns the entropy level of the provided data.
+
+    ... code-block:: python
+
+        result: ots_result_t = ots_entropy_level(data)
+        entropy: float = float(ots_result_string(result))
 
     :param data: The data to analyze.
     :return: ots_result_t containing the entropy level.
@@ -5970,6 +6277,11 @@ def ots_set_enforce_entropy(enforce: bool) -> None:
     """
     Sets whether to enforce entropy checks.
 
+    .. code-block:: python
+
+        ots_set_enforce_entropy(True)  # Enable entropy checks
+        ots_set_enforce_entropy(False)  # Disable entropy checks
+
     :param enforce: A boolean indicating whether to enforce entropy checks.
     """
     assert isinstance(enforce, bool), "enforce must be a boolean"
@@ -5980,7 +6292,11 @@ def ots_set_enforce_entropy_level(level: float) -> None:
     """
     Sets the minimum entropy level for checks.
 
-    :param level: The minimum entropy level to enforce.
+    .. code-block:: python
+
+        ots_set_enforce_entropy_level(3.5)  # Set the minimum entropy level to 3.5
+
+    :param float level: The minimum entropy level to enforce.
     """
     assert isinstance(level, float), "level must be a float"
     lib.ots_set_enforce_entropy_level(level)
@@ -5990,7 +6306,11 @@ def ots_set_max_account_depth(depth: int) -> None:
     """
     Sets the maximum account depth.
 
-    :param depth: The maximum account depth to set.
+    .. code-block:: python
+
+        ots_set_max_account_depth(5)  # Set the maximum account depth to 5
+
+    :param int depth: The maximum account depth to set.
     """
     assert isinstance(depth, int), "depth must be an integer"
     assert depth >= 0, "depth must be a non-negative integer"
@@ -6001,7 +6321,11 @@ def ots_set_max_index_depth(depth: int) -> None:
     """
     Sets the maximum index depth.
 
-    :param depth: The maximum index depth to set.
+    .. code-block:: python
+
+        ots_set_max_index_depth(10)  # Set the maximum index depth to 10
+
+    :param int depth: The maximum index depth to set.
     """
     assert isinstance(depth, int), "depth must be an integer"
     assert depth >= 0, "depth must be a non-negative integer"
@@ -6012,8 +6336,12 @@ def ots_set_max_depth(account_depth: int, index_depth: int) -> None:
     """
     Sets the maximum account and index depth.
 
-    :param account_depth: The maximum account depth to set.
-    :param index_depth: The maximum index depth to set.
+    .. code-block:: python
+
+        ots_set_max_depth(5, 10)  # Set the maximum account depth to 5 and index depth to 10
+
+    :param int account_depth: The maximum account depth to set.
+    :param int index_depth: The maximum index depth to set.
     """
     assert isinstance(account_depth, int), "account_depth must be an integer"
     assert account_depth >= 0, "account_depth must be a non-negative integer"
@@ -6024,7 +6352,11 @@ def ots_set_max_depth(account_depth: int, index_depth: int) -> None:
 
 def ots_reset_max_depth() -> None:
     """
-    Resets the maximum account and index depth to their default values.
+    Resets the maximum account and index depth to their default values, of the library.
+
+    .. code-block:: python
+
+        ots_reset_max_depth()
     """
     lib.ots_reset_max_depth()
 
@@ -6032,6 +6364,10 @@ def ots_reset_max_depth() -> None:
 def ots_get_max_account_depth(default: int = 0) -> int:
     """
     Returns the maximum account default.
+
+    .. code-block:: python
+
+        max_depth: int = ots_get_max_account_depth()
 
     :param int default: The current account default. If set to 0, it will return the library's default value, if not set.
     :return: An integer representing the maximum account default.
@@ -6044,6 +6380,10 @@ def ots_get_max_account_depth(default: int = 0) -> int:
 def ots_get_max_index_depth(default: int = 0) -> int:
     """
     Returns the maximum index depth.
+
+    .. code-block:: python
+
+        max_depth: int = ots_get_max_index_depth()
 
     :param int default: The default return default if values are not set. If set to 0, it will return the library's default value, if not set.
     :return: An integer representing the maximum index depth.
@@ -6061,9 +6401,18 @@ def ots_verify_data(
     """
     Verifies the provided data against the given address and signature.
 
+    .. code-block:: python
+
+        data = b'Hello, World!'
+        address = '43aM3fqR2WcDKsNqdUYHSVN4QCEdRMtYaXH9o5CqVg2LVRrB8D7WHvCXvRBMymLvZPWmSTdjsbqLrgGaSUMXYe6VKtJeWkK'
+        result: ots_result_t = ots_verify_data(data, address, signature)
+        verified: bool = ots_result_boolean(result)
+
     :param data: The data to verify.
-    :param address: The address to verify against.
+    :type data: bytes | str
+    :param str address: The address to verify against.
     :param signature: The signature to verify.
+    :type signature: str | bytes
     :return: ots_result_t indicating the result of the verification.
     """
     assert isinstance(data, (bytes, str)), "data must be bytes or a string"

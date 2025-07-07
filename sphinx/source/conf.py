@@ -17,6 +17,7 @@ release = '0.1.0'
 # Enable autodoc
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx_markdown_builder',
     'myst_parser',
 ]
 

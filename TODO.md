@@ -2,7 +2,6 @@
 - [x] Class structure
 - [x] cffi build
 - [x] raw wrapper for `_ots.o`
-- [ ] (S) procedural wrapper for `_ots.o`
 - [X] Constants
 - [x] Enums
 - [x] Implement WipeableString class
@@ -20,16 +19,17 @@
 - [x] Implement TxDescription class
 - [x] Implement TxWarning class
 - [x] (P) Inline documentation
-- [ ] (?) Rebuild Exceptions classes from C++ library
-- [ ] Check all inline documentation again
-- [ ] Sphinx documentation
-- [ ] Unit tests
+- [x] Sphinx documentation
 - [x] setup.py: pip install script
 - [x] Automatic `_ots.o` build into /ots on pip install git+https://github.com/MoneroSDK/ots-python.git
       will probably get a bit tricky
 - [x] setup.py: test
 - [x] drop ots_cdef.h generation, was only for debug purposes
+- [ ] Unit tests
+- [ ] Check all inline documentation again
 - [ ] Go through all TODO tags in the code, and remove TODO.md
+- [ ] (?) Rebuild Exceptions classes from C++ library
+- [ ] (S) procedural wrapper for `_ots.o`
 
 * S: skipped for now, will be done later.?
 * P: Partially done, done for all implemented classes and functions

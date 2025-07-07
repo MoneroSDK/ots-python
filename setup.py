@@ -1,4 +1,10 @@
+from os import environ
+from hashlib import sha256
 from setuptools import setup, find_packages
+
+
+VERSION = '0.1.0'
+environ['PYTHONHASHSEED'] = sha256(f'Monero OTS {VERSION}'.encode('utf-8')).hexdigest()
 
 
 with open('README.md', 'r') as f:
@@ -11,7 +17,7 @@ with open('LICENSE.txt', 'r') as f:
 
 setup(
     name='ots',
-    version='0.0.1',
+    version=VERSION,
     author='DiosDelRayo',
     author_email='no@spam',
     description='A Python module for Monero OTS (Offline Transaction Signing) https://github.com/monero-project/monero.git',

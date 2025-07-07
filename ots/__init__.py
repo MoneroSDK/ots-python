@@ -71,6 +71,10 @@ And to be completely raw:
     lib.ots_free_result(result)
     del result
 """
+from os import environ
+from hashlib import sha256
+VERSION = '0.1.0'
+environ['PYTHONHASHSEED'] = sha256(f'Monero OTS {VERSION}'.encode('utf-8')).hexdigest()
 from .constants import *
 from .enums import *
 from .exceptions import OtsException
