@@ -44,7 +44,7 @@ class Wallet:
         :return: The block height of the wallet.
         """
         if self._height is None:
-            self._height = ots_wallet_height(self.handle)
+            self._height = ots_result_number(ots_wallet_height(self.handle))
         return self._height
 
     def address(self, account: int = 0, index: int = 0) -> Address:
@@ -72,6 +72,8 @@ class Wallet:
         :param int max: The number of addresses to return (default is 10).
         :param int offset: Offset for pagination (default is 0).
         """
+        if max <= 0:
+            return []
         result: ots_result_t = ots_wallet_accounts(self.handle, max, offset)
         if ots_is_error(result):
             raise OtsException.from_result(result)
@@ -86,6 +88,8 @@ class Wallet:
         :param int account: The account number (default is 0).
         :param int max: The maximum number of addresses to return (default is 10).
         """
+        if max <= 0:
+            return []
         result: ots_result_t = ots_wallet_subaddresses(self.handle, account, max, offset)
         if ots_is_error(result):
             raise OtsException.from_result(result)
