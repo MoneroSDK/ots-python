@@ -18,7 +18,7 @@ This is a Python wrapper for the Monero OTS (Offline Transaction Signing) librar
 
 While the header files included in `include` the shared libraries are not because they are platform dependent,
 you need them install separately in your system. You can find them in the Monero repository
-https://github.com/monero-project/monero in the folder `ots/include`. Read the README.md to compile the library
+https://github.com/monero-project/monero in the folder `ots`. Read the README.md to compile the library
 or if available install the precompiled packages for your system.
 
 # Installation
