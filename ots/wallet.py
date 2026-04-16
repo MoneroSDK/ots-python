@@ -157,7 +157,7 @@ class Wallet:
             return ots_result_boolean(result)
         result: ots_result_t = ots_wallet_has_address(
             self.handle,
-            address,
+            address.handle,
             maxAccountDepth,
             maxIndexDepth
         )
