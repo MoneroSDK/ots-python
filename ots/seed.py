@@ -85,7 +85,7 @@ class Seed:
         """
         assert isinstance(language, SeedLanguage), "language must be an instance of SeedLanguage"
         assert language.supported(self.type), "language must be supported by the OTS library"
-        assert password == '' or not self.isLegacy(), "password is not supported for legacy seeds"
+        assert password == '' or not self.isLegacy, "password is not supported for legacy seeds"
         result: ots_result_t = ots_seed_phrase(self.handle, language.handle, password)
         if ots_is_error(result):
             raise OtsException.from_result(result)
@@ -98,7 +98,7 @@ class Seed:
         :param password: Optional password to decrypt the seed indices. Not supported for legacy seeds.
         :return: A SeedIndices object containing the seed indices.
         """
-        assert password == '' or not self.isLegacy(), "password is not supported for legacy seeds"
+        assert password == '' or not self.isLegacy, "password is not supported for legacy seeds"
         result: ots_result_t = ots_seed_indices(self.handle, password)
         if ots_is_error(result):
             raise OtsException.from_result(result)
@@ -259,7 +259,7 @@ class LegacySeed(Seed):
         assert isinstance(height, int), "height must be an integer"
         assert isinstance(time, int), "time must be an integer"
         assert isinstance(network, Network), "network must be an instance of Network"
-        handle: ots_handle_t = ots_legacy_seed_decode_indices(indices.handle, height, time, network)
+        result: ots_result_t = ots_legacy_seed_decode_indices(indices.handle, height, time, network)
         if ots_is_error(result):
             raise OtsException.from_result(result)
         return cls(ots_result_handle(result))

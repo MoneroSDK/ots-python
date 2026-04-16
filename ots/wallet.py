@@ -212,7 +212,7 @@ class Wallet:
         result: ots_result_t = ots_wallet_secret_view_key(self.handle)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return WipeableString(ots_result_string(result))
+        return WipeableString(ots_result_handle(result))
 
     def publicViewKey(self) -> WipeableString:
         """
@@ -223,7 +223,7 @@ class Wallet:
         result: ots_result_t = ots_wallet_public_view_key(self.handle)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return WipeableString(ots_result_string(result))
+        return WipeableString(ots_result_handle(result))
 
     def secretSpendKey(self) -> WipeableString:
         """
@@ -234,7 +234,7 @@ class Wallet:
         result: ots_result_t = ots_wallet_secret_spend_key(self.handle)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return WipeableString(ots_result_string(result))
+        return WipeableString(ots_result_handle(result))
 
     def publicSpendKey(self) -> WipeableString:
         """
@@ -245,7 +245,7 @@ class Wallet:
         result: ots_result_t = ots_wallet_public_spend_key(self.handle)
         if ots_is_error(result):
             raise OtsException.from_result(result)
-        return WipeableString(ots_result_string(result))
+        return WipeableString(ots_result_handle(result))
 
     def importOutputs(self, outputs: bytes) -> int:
         """
