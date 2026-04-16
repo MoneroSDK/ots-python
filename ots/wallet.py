@@ -142,7 +142,7 @@ class Wallet:
         :param maxAccountDepth: Maximum account depth to check (default is 0).
         :param maxIndexDepth: Maximum index depth to check (default is 0).
         """
-        assert isstance(address, (Address, str)), "address must be an Address instance or a string"
+        assert isinstance(address, (Address, str)), "address must be an Address instance or a string"
         assert maxAccountDepth >= 0, "maxAccountDepth must be non-negative"
         assert maxIndexDepth >= 0, "maxIndexDepth must be non-negative"
         if isinstance(address, str):
@@ -180,7 +180,7 @@ class Wallet:
         :param maxAccountDepth: Maximum account depth to check (default is 0).
         :param maxIndexDepth: Maximum index depth to check (default is 0).
         """
-        assert isstance(address, (Address, str)), "address must be an Address instance or a string"
+        assert isinstance(address, (Address, str)), "address must be an Address instance or a string"
         assert maxAccountDepth >= 0, "maxAccountDepth must be non-negative"
         assert maxIndexDepth >= 0, "maxIndexDepth must be non-negative"
         if isinstance(address, str):
@@ -384,7 +384,7 @@ class Wallet:
         :return: The signature as a string.
         """
         assert isinstance(data, (bytes, str)), "data must be bytes or a string"
-        assert isstance(address, (Address, str)), "address must be an Address instance or a string"
+        assert isinstance(address, (Address, str)), "address must be an Address instance or a string"
         if isinstance(data, str):
             data = data.encode('utf-8')
         if isinstance(address, str):
@@ -495,7 +495,7 @@ class Wallet:
             data = data.encode('utf-8')
         if isinstance(signature, bytes):
             signature = signature.decode('utf-8')
-        assert isstance(address, (Address, str)), "address must be an Address instance or a string"
+        assert isinstance(address, (Address, str)), "address must be an Address instance or a string"
         if isinstance(address, str):
             result: ots_result_t = ots_wallet_verify_data_with_address_string(
                 self.handle,
