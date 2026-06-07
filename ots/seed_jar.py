@@ -19,6 +19,7 @@ class SeedJarItem:
     :param str address: The address associated with the seed.
     :param SeedType type: The type of the seed.
     :param str type_string: The type of the seed as a string.
+    :param bool is_legacy: Is monero legacy seed.
     :param Network network: The network of the seed.
     :param str network_string: The network of the seed as a string.
     :param int height: The creation height of the seed.
@@ -37,6 +38,8 @@ class SeedJarItem:
     """The type of the seed."""
     type_string: str
     """The type of the seed as a string."""
+    is_legacy: bool
+    """Is monero legacy seed."""
     network: Network
     """The network of the seed."""
     network_string: str
@@ -587,6 +590,7 @@ class SeedJar:
                 address=SeedJar.itemAddressString(i),
                 type=SeedJar.itemSeedType(i),
                 type_string=SeedJar.itemSeedTypeString(i),
+                is_legacy=SeedJar.itemIsLegacy(i),
                 network=SeedJar.itemNetwork(i),
                 network_string=SeedJar.itemNetworkString(i),
                 height=SeedJar.itemHeight(i),
