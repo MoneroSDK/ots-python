@@ -1,5 +1,5 @@
 from .raw import *
-from .exceptions import OtsException
+from .exceptions import *
 from .enums import *
 from .address import Address
 from .procedural import (
@@ -28,7 +28,7 @@ class Ots:
         """
         result: ots_result_t = ots_version_components()
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return tuple(int(i) for i in ots_result_int_array(result))
 
     @staticmethod
@@ -46,7 +46,7 @@ class Ots:
         assert timestamp >= 0, "Timestamp must be a non-negative integer."
         result: ots_result_t = ots_height_from_timestamp(timestamp, int(network))
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_number(result)
 
     @staticmethod
@@ -64,7 +64,7 @@ class Ots:
         assert height >= 0, "Height must be a non-negative integer."
         result: ots_result_t = ots_timestamp_from_height(height, int(network))
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_number(result)
 
     @staticmethod
@@ -109,7 +109,7 @@ class Ots:
         assert isinstance(minEntropy, float), "Minimum entropy must be a number."
         result: ots_result_t = ots_check_low_entropy(data, minEntropy)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @staticmethod
@@ -252,5 +252,5 @@ class Ots:
             address = str(address)
         result: ots_result_t = ots_verify_data(data, address, signature)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)

@@ -1,5 +1,5 @@
 from .raw import *
-from .exceptions import OtsException
+from .exceptions import *
 
 
 class Address:
@@ -59,13 +59,13 @@ class Address:
         if isinstance(other, str):
             result: ots_result_t = ots_address_equal_string(self.handle, other)
             if ots_is_error(result):
-                raise OtsException.from_result(result)
+                raise exception_from_result(result)
             return ots_result_boolean(result)
         if not isinstance(other, Address):
             raise NotImplementedError('Only Address objects and strings can be compared with Address objects')
         result: ots_result_t = ots_address_equal(self.handle, other.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @property
@@ -77,7 +77,7 @@ class Address:
             return self._type
         result: ots_result_t = ots_address_type(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._type = ots_result_address_type(result)
         return self._type
 
@@ -90,7 +90,7 @@ class Address:
             return self._network
         result: ots_result_t = ots_address_network(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._network = ots_result_network(result)
         return self._network
 
@@ -103,7 +103,7 @@ class Address:
             return self._fingerprint
         result: ots_result_t = ots_address_fingerprint(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._fingerprint = ots_result_string(result)
         return self._fingerprint
 
@@ -118,7 +118,7 @@ class Address:
             return self._isIntegrated
         result: ots_result_t = ots_address_is_integrated(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._isIntegrated = ots_result_boolean(result)
         return self._isIntegrated
 
@@ -133,7 +133,7 @@ class Address:
             return self._paymentId
         result: ots_result_t = ots_address_payment_id(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._paymentId = ots_result_string(result)
         return self._paymentId
 
@@ -148,7 +148,7 @@ class Address:
             return self._base58
         result: ots_result_t = ots_address_base58_string(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._base58 = ots_result_string(result)
         return self._base58
 
@@ -163,7 +163,7 @@ class Address:
             return self._length
         result: ots_result_t = ots_address_length(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._length = ots_result_number(result)
         return self._length
 
@@ -177,7 +177,7 @@ class Address:
         """
         result: ots_result_t = ots_address_create(address)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return cls(ots_result_handle(result))
 
     @classmethod
@@ -191,7 +191,7 @@ class Address:
         assert address.isIntegrated, "address must be an integrated address"
         result: ots_result_t = ots_address_from_integrated(address.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return cls(ots_result_handle(result))
 
 
@@ -223,7 +223,7 @@ class AddressString:
         """
         result: ots_result_t = ots_address_string_valid(address, network)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @classmethod
@@ -236,7 +236,7 @@ class AddressString:
         """
         result: ots_result_t = ots_address_string_network(address)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_network(result)
 
     @classmethod
@@ -249,7 +249,7 @@ class AddressString:
         """
         result: ots_result_t = ots_address_string_type(address)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_address_type(result)
 
     @classmethod
@@ -262,7 +262,7 @@ class AddressString:
         """
         result: ots_result_t = ots_address_string_fingerprint(address)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_string(result)
 
     @classmethod
@@ -275,5 +275,5 @@ class AddressString:
         """
         result: ots_result_t = ots_address_string_is_integrated(address)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)

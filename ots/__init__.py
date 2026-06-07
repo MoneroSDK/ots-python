@@ -77,7 +77,7 @@ VERSION = '0.1.0'
 environ['PYTHONHASHSEED'] = sha256(f'Monero OTS {VERSION}'.encode('utf-8')).hexdigest()
 from .constants import *
 from .enums import *
-from .exceptions import OtsException
+from .exceptions import *
 from .seed_indices import SeedIndices
 from .seed_language import SeedLanguage
 from .address import Address, AddressString

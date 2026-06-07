@@ -1,5 +1,5 @@
 from .raw import *
-from .exceptions import OtsException
+from .exceptions import *
 
 
 class WipeableString:
@@ -55,7 +55,7 @@ class WipeableString:
             raise NotImplementedError("Comparison is only supported between WipeableString instances or a string.")
         result = ots_wipeable_string_compare(self.handle, other.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_is_equal(result)
 
     def insecure(self) -> str:
@@ -77,5 +77,5 @@ class WipeableString:
         """
         result: ots_result_t = ots_wipeable_string_create(string)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return cls(ots_result_handle(result))

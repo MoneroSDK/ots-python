@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from .raw import *
-from .exceptions import OtsException
+from .exceptions import *
 from .enums import *
 from .seed import Seed, MoneroSeed, Polyseed
 from .address import Address
@@ -75,7 +75,7 @@ class SeedJar:
         assert isinstance(name, str), "name must be a string"
         result: ots_result_t = ots_seed_jar_add_seed(seed.handle, name)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Seed(ots_result_handle(result))
 
     @staticmethod
@@ -89,7 +89,7 @@ class SeedJar:
         assert isinstance(seed, Seed), "seed must be an instance of Seed"
         result: ots_result_t = ots_seed_jar_remove_seed(seed.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @staticmethod
@@ -103,7 +103,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_purge_seed_for_index(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @staticmethod
@@ -117,7 +117,7 @@ class SeedJar:
         assert isinstance(name, str), "name must be a string"
         result: ots_result_t = ots_seed_jar_purge_seed_for_name(name)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @staticmethod
@@ -131,7 +131,7 @@ class SeedJar:
         assert isinstance(fingerprint, str), "fingerprint must be a string"
         result: ots_result_t = ots_seed_jar_purge_seed_for_fingerprint(fingerprint)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @staticmethod
@@ -145,7 +145,7 @@ class SeedJar:
         assert isinstance(address, str), "address must be a string"
         result: ots_result_t = ots_seed_jar_purge_seed_for_address(address)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @staticmethod
@@ -165,7 +165,7 @@ class SeedJar:
             name
         )
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Seed(ots_result_handle(result))
 
     @staticmethod
@@ -180,7 +180,7 @@ class SeedJar:
         assert isinstance(seed, Seed) or seed.type == HandleType.SEED, "seed must be a Seed handle"
         result: ots_result_t = ots_seed_jar_transfer_seed_out(seed.handle if isinstance(seed, Seed) else seed)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Seed(ots_result_handle(result))
 
     @staticmethod
@@ -194,7 +194,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_transfer_seed_out_for_index(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Seed(ots_result_handle(result))
 
     @staticmethod
@@ -208,7 +208,7 @@ class SeedJar:
         assert isinstance(name, str), "name must be a string"
         result: ots_result_t = ots_seed_jar_transfer_seed_out_for_name(name)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Seed(ots_result_handle(result))
 
     @staticmethod
@@ -222,7 +222,7 @@ class SeedJar:
         assert isinstance(fingerprint, str), "fingerprint must be a string"
         result: ots_result_t = ots_seed_jar_transfer_seed_out_for_fingerprint(fingerprint)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Seed(ots_result_handle(result))
 
     @staticmethod
@@ -236,7 +236,7 @@ class SeedJar:
         assert isinstance(address, str), "address must be a string"
         result: ots_result_t = ots_seed_jar_transfer_seed_out_for_address(address)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Seed(ots_result_handle(result))
 
     @staticmethod
@@ -254,7 +254,7 @@ class SeedJar:
         """
         result: ots_result_t = ots_seed_jar_clear()
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @staticmethod
@@ -275,9 +275,9 @@ class SeedJar:
         """
         result: ots_result_t = ots_seed_jar_seeds()
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         handles: list[ots_handle_t] = ots_result_handle_array_reference(result)
-        return [Seed(handle) for handle in handles]
+        return [Seed(handle) for handle in handles]  # TODO: check, something is off
 
     @staticmethod
     def count() -> int:
@@ -288,7 +288,7 @@ class SeedJar:
         """
         result: ots_result_t = ots_seed_jar_seed_count()
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_number(result)
 
     @staticmethod
@@ -302,7 +302,7 @@ class SeedJar:
         assert isinstance(idx, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_seed_for_index(idx)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Seed(ots_result_handle(result))
 
     @staticmethod
@@ -316,7 +316,7 @@ class SeedJar:
         assert isinstance(fingerprint, str), "fingerprint must be a string"
         result: ots_result_t = ots_seed_jar_seed_for_fingerprint(fingerprint)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Seed(ots_result_handle(result))
 
     @staticmethod
@@ -330,7 +330,7 @@ class SeedJar:
         assert isinstance(address, str), "address must be a string"
         result: ots_result_t = ots_seed_jar_seed_for_address(address)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Seed(ots_result_handle(result))
 
     @staticmethod
@@ -344,7 +344,7 @@ class SeedJar:
         assert isinstance(name, str), "name must be a string"
         result: ots_result_t = ots_seed_jar_seed_for_name(name)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Seed(ots_result_handle(result))
 
     @staticmethod
@@ -360,7 +360,7 @@ class SeedJar:
         assert isinstance(seed, Seed) or seed.type == HandleType.SEED, "seed must be a Seed handle"
         result: ots_result_t = ots_seed_jar_seed_name(seed.handle if isinstance(seed, Seed) else seed)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_string(result)
 
     @staticmethod
@@ -381,7 +381,7 @@ class SeedJar:
             new_name
         )
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @staticmethod
@@ -395,7 +395,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_name(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_string(result)
 
     @staticmethod
@@ -409,7 +409,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_fingerprint(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_string(result)
 
     @staticmethod
@@ -423,7 +423,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_address(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Address(ots_result_handle(result))
 
     @staticmethod
@@ -437,7 +437,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_address_string(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_string(result)
 
     @staticmethod
@@ -451,7 +451,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_seed_type(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_seed_type(result)
 
     @staticmethod
@@ -465,7 +465,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_seed_type_string(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_string(result)
 
     @staticmethod
@@ -484,7 +484,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_is_legacy(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @staticmethod
@@ -498,7 +498,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_network(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_network(result)
 
     @staticmethod
@@ -512,7 +512,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_network_string(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_string(result)
 
     @staticmethod
@@ -532,7 +532,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_height(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_number(result)
 
     @staticmethod
@@ -552,7 +552,7 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_timestamp(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_number(result)
 
     @staticmethod
@@ -607,5 +607,5 @@ class SeedJar:
         assert isinstance(index, int), "index must be an integer"
         result: ots_result_t = ots_seed_jar_item_wallet(index)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return Wallet(ots_result_handle(result))

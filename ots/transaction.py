@@ -1,5 +1,5 @@
 from .raw import *
-from .exceptions import OtsException
+from .exceptions import *
 from .address import Address, AddressString
 from dataclasses import dataclass, field
 
@@ -97,7 +97,7 @@ class TxDescription:
             return self._txSet
         result: ots_result_t = ots_tx_description_set(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._txSet = ots_result_bytes(result)
         return self._txSet
 
@@ -110,7 +110,7 @@ class TxDescription:
             return self._txSetSize
         result: ots_result_t = ots_tx_description_set_size(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._txSetSize = ots_result_number(result)
         return self._txSetSize
 
@@ -123,7 +123,7 @@ class TxDescription:
             return self._amountIn
         result: ots_result_t = ots_tx_description_amount_in(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._amountIn = ots_result_number(result)
         return self._amountIn
 
@@ -136,7 +136,7 @@ class TxDescription:
             return self._amountOut
         result: ots_result_t = ots_tx_description_amount_out(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._amountOut = ots_result_number(result)
         return self._amountOut
 
@@ -181,7 +181,7 @@ class TxDescription:
             return self._fee
         result: ots_result_t = ots_tx_description_fee(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._fee = ots_result_number(result)
         return self._fee
 

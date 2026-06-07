@@ -1,6 +1,6 @@
 from .raw import *
 from .enums import HandleType
-from .exceptions import OtsException
+from .exceptions import *
 from .transaction import TxDescription, TxWarning
 from .address import Address
 from .wipeable_string import WipeableString
@@ -76,7 +76,7 @@ class Wallet:
             return []
         result: ots_result_t = ots_wallet_accounts(self.handle, max, offset)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         addressHandles = ots_result_handle_array(result)
         return [Address(handle) for handle in addressHandles]
 
@@ -92,7 +92,7 @@ class Wallet:
             return []
         result: ots_result_t = ots_wallet_subaddresses(self.handle, account, max, offset)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         addressHandles = ots_result_handle_array(result)
         return [Address(handle) for handle in addressHandles]
 
@@ -153,7 +153,7 @@ class Wallet:
                 maxIndexDepth
             )
             if ots_is_error(result):
-                raise OtsException.from_result(result)
+                raise exception_from_result(result)
             return ots_result_boolean(result)
         result: ots_result_t = ots_wallet_has_address(
             self.handle,
@@ -162,7 +162,7 @@ class Wallet:
             maxIndexDepth
         )
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     def addressIndex(
@@ -191,7 +191,7 @@ class Wallet:
                 maxIndexDepth
             )
             if ots_is_error(result):
-                raise OtsException.from_result(result)
+                raise exception_from_result(result)
             return tuple(ots_result_uint32_array(result))
         result: ots_result_t = ots_wallet_address_index(
             self.handle,
@@ -200,7 +200,7 @@ class Wallet:
             maxIndexDepth
         )
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return tuple(ots_result_uint32_array(result))
 
     def secretViewKey(self) -> WipeableString:
@@ -211,7 +211,7 @@ class Wallet:
         """
         result: ots_result_t = ots_wallet_secret_view_key(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return WipeableString(ots_result_handle(result))
 
     def publicViewKey(self) -> WipeableString:
@@ -222,7 +222,7 @@ class Wallet:
         """
         result: ots_result_t = ots_wallet_public_view_key(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return WipeableString(ots_result_handle(result))
 
     def secretSpendKey(self) -> WipeableString:
@@ -233,7 +233,7 @@ class Wallet:
         """
         result: ots_result_t = ots_wallet_secret_spend_key(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return WipeableString(ots_result_handle(result))
 
     def publicSpendKey(self) -> WipeableString:
@@ -244,7 +244,7 @@ class Wallet:
         """
         result: ots_result_t = ots_wallet_public_spend_key(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return WipeableString(ots_result_handle(result))
 
     def importOutputs(self, outputs: bytes) -> int:
@@ -257,7 +257,7 @@ class Wallet:
         assert isinstance(outputs, bytes), "outputs must be bytes"
         result: ots_result_t = ots_wallet_import_outputs(self.handle, outputs)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_number(result)
 
     def exportKeyImages(self) -> bytes:
@@ -268,7 +268,7 @@ class Wallet:
         """
         result: ots_result_t = ots_wallet_export_key_images(self.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_char_array(result)
 
     def describeTransaction(self, tx: bytes) -> TxDescription:
@@ -280,7 +280,7 @@ class Wallet:
         assert isinstance(tx, bytes), "tx must be bytes"
         result: ots_result_t = ots_wallet_describe_tx(self.handle, tx)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return TxDescription(ots_result_handle(result))
 
     def checkTransaction(self, tx: TxDescription | bytes) -> list[TxWarning]:
@@ -302,12 +302,12 @@ class Wallet:
         if isinstance(tx, bytes):
             result: ots_result_t = ots_wallet_check_tx_string(self.handle, tx)
             if ots_is_error(result):
-                raise OtsException.from_result(result)
+                raise exception_from_result(result)
             handles: list[ots_handle_t] = ots_result_handle_array(result)
             return [TxWarning(handle) for handle in handles]
         result: ots_result_t = ots_wallet_check_tx(self.handle, tx.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         handles: list[ots_handle_t] = ots_result_handle_array(result)
         return [TxWarning(handle) for handle in handles]
 
@@ -321,7 +321,7 @@ class Wallet:
         assert isinstance(tx, bytes), "tx must be bytes"
         result: ots_result_t = ots_wallet_sign_tx(self.handle, tx)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_char_array(result)
 
     def signData(self, data: bytes | str) -> str:
@@ -337,7 +337,7 @@ class Wallet:
             data = data.encode('utf-8')
         result: ots_result_t = ots_wallet_sign_data(self.handle, data)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_string(result)
 
     def signDataWithIndex(
@@ -366,7 +366,7 @@ class Wallet:
             index
         )
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_char_array(result)
 
     def signDataWithAddress(
@@ -394,7 +394,7 @@ class Wallet:
                 address
             )
             if ots_is_error(result):
-                raise OtsException.from_result(result)
+                raise exception_from_result(result)
             return ots_result_char_array(result)
         result: ots_result_t = ots_wallet_sign_data_with_address(
             self.handle,
@@ -402,7 +402,7 @@ class Wallet:
             address.handle
         )
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_char_array(result)
 
     def verifyData(
@@ -429,7 +429,7 @@ class Wallet:
             signature = signature.decode('utf-8')
         result: ots_result_t = ots_wallet_verify_data(self.handle, data, signature)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     def verifyDataWithIndex(
@@ -467,7 +467,7 @@ class Wallet:
             fallback
         )
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     def verifyDataWithAddress(
@@ -505,7 +505,7 @@ class Wallet:
                 fallback
             )
             if ots_is_error(result):
-                raise OtsException.from_result(result)
+                raise exception_from_result(result)
             return ots_result_boolean(result)
         result: ots_result_t = ots_wallet_verify_data_with_address(
             self.handle,
@@ -515,7 +515,7 @@ class Wallet:
             fallback
         )
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     @classmethod
@@ -536,6 +536,6 @@ class Wallet:
         assert isinstance(network, (Network, int)), "network must be a Network enum or an integer"
         result: ots_result_t = ots_wallet_create(key, int(network))
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         handle: ots_handle_t = ots_result_handle(result)
         return cls(handle)

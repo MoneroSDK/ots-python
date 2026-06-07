@@ -1,6 +1,6 @@
 from .raw import *
 from .enums import HandleType
-from .exceptions import OtsException
+from .exceptions import *
 
 
 class SeedIndices:
@@ -39,11 +39,11 @@ class SeedIndices:
         if isinstance(other, str):
             result: ots_result_t = ots_seed_indices_merge_with_password(self.handle, other)
             if ots_is_error(result):
-                raise OtsException.from_result(result)
+                raise exception_from_result(result)
             return SeedIndices(ots_result_handle(result))
         result: ots_result_t = ots_seed_indices_merge_values(self.handle, other.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return SeedIndices(ots_result_handle(result))
 
     def __sub__(self, other: 'SeedIndices | str') -> 'SeedIndices':
@@ -117,7 +117,7 @@ class SeedIndices:
         assert all(isinstance(v, int) for v in values), "all values must be integers"
         result: ots_result_t = ots_seed_indices_create(values)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return cls(ots_result_handle(result))
 
     @classmethod
@@ -133,7 +133,7 @@ class SeedIndices:
         assert isinstance(separator, str), "separator must be of type str"
         result: ots_result_t = ots_seed_indices_create_from_string(string, separator)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return cls(ots_result_handle(result))
 
     @classmethod
@@ -149,5 +149,5 @@ class SeedIndices:
         assert isinstance(separator, str), "separator must be of type str"
         result: ots_result_t = ots_seed_indices_create_from_hex(string, separator)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return cls(ots_result_handle(result))

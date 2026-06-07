@@ -400,7 +400,7 @@ def ots_error_message(result: ots_result_t | _CDataBase) -> str | None:
     :return: The error message as a string, or None if there is no error.
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
-    out = lib.ots_result_string(_unwrap(result))
+    out: _CDataBase = lib.ots_error_message(_unwrap(result))
     return ffi.string(out).decode('utf-8') if out != ffi.NULL else None
 
 def ots_error_class(result: ots_result_t | _CDataBase) -> str | None:

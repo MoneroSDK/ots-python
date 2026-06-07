@@ -1,5 +1,5 @@
 from .raw import *
-from .exceptions import OtsException
+from .exceptions import *
 
 
 class SeedLanguage:
@@ -50,7 +50,7 @@ class SeedLanguage:
         if self._english_name is None:
             result: ots_result_t = ots_seed_language_english_name(self.handle)
             if ots_is_error(result):
-                raise OtsException.from_result(result)
+                raise exception_from_result(result)
             self._english_name = ots_result_string(result)
         return self._english_name
 
@@ -62,7 +62,7 @@ class SeedLanguage:
         if self._name is None:
             result: ots_result_t = ots_seed_language_name(self.handle)
             if ots_is_error(result):
-                raise OtsException.from_result(result)
+                raise exception_from_result(result)
             self._name = ots_result_string(result)
         return self._name
 
@@ -74,7 +74,7 @@ class SeedLanguage:
         if self._code is None:
             result: ots_result_t = ots_seed_language_code(self.handle)
             if ots_is_error(result):
-                raise OtsException.from_result(result)
+                raise exception_from_result(result)
             self._code = ots_result_string(result)
         return self._code
 
@@ -89,7 +89,7 @@ class SeedLanguage:
             return self._supported[seedType]
         result: ots_result_t = ots_seed_language_supported(self.handle, seedType)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         self._supported[seedType] = ots_result_boolean(result)
         return self._supported[seedType]
 
@@ -103,7 +103,7 @@ class SeedLanguage:
         # we check every time from the C library to ensure we have the latest state
         result: ots_result_t = ots_seed_language_is_default(self.handle, seedType)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_boolean(result)
 
     def __eq__(self, other: object) -> bool:
@@ -123,7 +123,7 @@ class SeedLanguage:
         assert HandleType(other.handle.ptr.type) == HandleType.SEED_LANGUAGE, "self must be a SeedLanguage instance"
         result: ots_result_t = ots_seed_language_equals(self.handle, other.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return ots_result_is_equal(result)
 
     @classmethod
@@ -136,7 +136,7 @@ class SeedLanguage:
         """
         result: ots_result_t = ots_seed_language_from_name(name)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return cls(ots_result_handle(result))
 
     @classmethod
@@ -149,7 +149,7 @@ class SeedLanguage:
         """
         result: ots_result_t = ots_seed_language_from_english_name(englishName)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return cls(ots_result_handle(result))
 
     @classmethod
@@ -162,7 +162,7 @@ class SeedLanguage:
         """
         result: ots_result_t = ots_seed_language_from_code(code)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         return cls(ots_result_handle(result))
 
     @classmethod
@@ -175,7 +175,7 @@ class SeedLanguage:
             return
         result: ots_result_t = ots_seed_languages()
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         languages = ots_result_handle_array_reference(result)
         for seedType in SeedType:
             cls._byType[seedType] = set()
@@ -223,7 +223,7 @@ class SeedLanguage:
         cls._load_all()
         result: ots_result_t = ots_seed_language_default(seedType)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
         tmp: 'SeedLanguage' = cls(ots_result_handle(result))
         return cls.fromCode(tmp.code)
 
@@ -242,4 +242,4 @@ class SeedLanguage:
             raise TypeError("language must be an instance of SeedLanguage")
         result: ots_result_t = ots_seed_language_set_default(seedType, language.handle)
         if ots_is_error(result):
-            raise OtsException.from_result(result)
+            raise exception_from_result(result)
