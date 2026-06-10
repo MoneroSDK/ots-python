@@ -3,7 +3,7 @@ from datetime import datetime
 from .raw import *
 from .exceptions import *
 from .enums import *
-from .seed import Seed, MoneroSeed, Polyseed
+from .seed import Seed, MoneroSeed, Polyseed, handle_to_seed
 from .address import Address
 from .wallet import Wallet
 
@@ -79,7 +79,7 @@ class SeedJar:
         result: ots_result_t = ots_seed_jar_add_seed(seed.handle, name)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return Seed(ots_result_handle(result))
+        return handle_to_seed(ots_result_handle(result))
 
     @staticmethod
     def remove(seed: Seed) -> bool:
@@ -169,7 +169,7 @@ class SeedJar:
         )
         if ots_is_error(result):
             raise exception_from_result(result)
-        return Seed(ots_result_handle(result))
+        return handle_to_seed(ots_result_handle(result))
 
     @staticmethod
     def transferOut(seed: Seed | ots_handle_t) -> Seed:
@@ -184,7 +184,7 @@ class SeedJar:
         result: ots_result_t = ots_seed_jar_transfer_seed_out(seed.handle if isinstance(seed, Seed) else seed)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return Seed(ots_result_handle(result))
+        return handle_to_seed(ots_result_handle(result))
 
     @staticmethod
     def transferOutForIndex(index: int) -> Seed:
@@ -198,7 +198,7 @@ class SeedJar:
         result: ots_result_t = ots_seed_jar_transfer_seed_out_for_index(index)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return Seed(ots_result_handle(result))
+        return handle_to_seed(ots_result_handle(result))
 
     @staticmethod
     def transferOutForName(name: str) -> Seed:
@@ -212,7 +212,7 @@ class SeedJar:
         result: ots_result_t = ots_seed_jar_transfer_seed_out_for_name(name)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return Seed(ots_result_handle(result))
+        return handle_to_seed(ots_result_handle(result))
 
     @staticmethod
     def transferOutForFingerprint(fingerprint: str) -> Seed:
@@ -226,7 +226,7 @@ class SeedJar:
         result: ots_result_t = ots_seed_jar_transfer_seed_out_for_fingerprint(fingerprint)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return Seed(ots_result_handle(result))
+        return handle_to_seed(ots_result_handle(result))
 
     @staticmethod
     def transferOutForAddress(address: str) -> Seed:
@@ -240,7 +240,7 @@ class SeedJar:
         result: ots_result_t = ots_seed_jar_transfer_seed_out_for_address(address)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return Seed(ots_result_handle(result))
+        return handle_to_seed(ots_result_handle(result))
 
     @staticmethod
     def clear() -> bool:
@@ -280,7 +280,7 @@ class SeedJar:
         if ots_is_error(result):
             raise exception_from_result(result)
         handles: list[ots_handle_t] = ots_result_handle_array_reference(result)
-        return [Seed(handle) for handle in handles]  # TODO: check, something is off
+        return [handle_to_seed(handle) for handle in handles]  # TODO: check, something is off
 
     @staticmethod
     def count() -> int:
@@ -306,7 +306,7 @@ class SeedJar:
         result: ots_result_t = ots_seed_jar_seed_for_index(idx)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return Seed(ots_result_handle(result))
+        return handle_to_seed(ots_result_handle(result))
 
     @staticmethod
     def forFingerprint(fingerprint: str) -> Seed:
@@ -320,7 +320,7 @@ class SeedJar:
         result: ots_result_t = ots_seed_jar_seed_for_fingerprint(fingerprint)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return Seed(ots_result_handle(result))
+        return handle_to_seed(ots_result_handle(result))
 
     @staticmethod
     def forAddress(address: str) -> Seed:
@@ -334,7 +334,7 @@ class SeedJar:
         result: ots_result_t = ots_seed_jar_seed_for_address(address)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return Seed(ots_result_handle(result))
+        return handle_to_seed(ots_result_handle(result))
 
     @staticmethod
     def forName(name: str) -> Seed:
@@ -348,7 +348,7 @@ class SeedJar:
         result: ots_result_t = ots_seed_jar_seed_for_name(name)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return Seed(ots_result_handle(result))
+        return handle_to_seed(ots_result_handle(result))
 
     @staticmethod
     def name(seed: Seed | ots_handle_t) -> str:

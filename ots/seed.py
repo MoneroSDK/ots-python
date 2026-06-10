@@ -556,3 +556,19 @@ class Polyseed(Seed):
         if ots_is_error(result):
             raise exception_from_result(result)
         return cls(ots_result_handle(result))
+
+def handle_to_seed(handle: ots_handle_t) -> Seed:
+        assert isinstance(handle, ots_handle_t), "handle must be an instance of ots_handle_t"
+        assert handle.type == HandleType.SEED, "handle must be of type Seed"
+        result: ots_result_t = ots_seed_type(handle)
+        if ots_is_error(result):
+            raise exception_from_result(result)
+        seed_type: SeedType = SeedType(ots_result_number(result))
+        if seed_type == SeedType.POLYSEED:
+            return Polyseed(handle)
+        result = ots_seed_is_legacy(handle)
+        if ots_is_error(result):
+            raise exception_from_result(result)
+        if ots_result_boolean(result):
+            return LegacySeed(handle)
+        return MoneroSeed(handle)
