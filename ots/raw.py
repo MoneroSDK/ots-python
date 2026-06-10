@@ -5594,7 +5594,11 @@ def ots_seed_jar_remove_seed(seed: ots_handle_t | _CDataBase) -> ots_result_t:
     """
     assert isinstance(seed, (ots_handle_t, _CDataBase)), "seed must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(seed).type) == HandleType.SEED, "seed must be of type HandleType.SEED"
-    return ots_result_t(lib.ots_seed_jar_remove_seed(_unwrap(seed)))
+    if isinstance(seed, ots_handle_t):
+        return ots_result_t(lib.ots_seed_jar_remove_seed(seed.ptrptr))
+    ptrptr: _CDataBase = ffi.new('ots_handle_t **')
+    ptrptr[0] = seed
+    return ots_result_t(lib.ots_seed_jar_remove_seed(ptrptr))
 
 
 def ots_seed_jar_purge_seed_for_index(index: int) -> ots_result_t:
