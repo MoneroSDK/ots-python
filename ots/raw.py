@@ -207,7 +207,7 @@ class ots_tx_description_t(_opaque_handle_t):
         Returns the transaction set as bytes.
         This is a byte representation of the unsigned transaction set.
         """
-        return ffi.buffer(self.ptr.tx_set, self.ptr.tx_set_size)
+        return bytes(ffi.buffer(self.ptr.tx_set, self.ptr.tx_set_size))
 
     @property
     def amount_in(self) -> int:
@@ -1279,6 +1279,46 @@ def ots_result_string_copy(
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     out = lib.ots_result_string_copy(_unwrap(result))
     return ffi.string(out).decode('utf-8') if out != ffi.NULL else None
+
+def ots_result_bytes(result: ots_result_t | _CDataBase) -> bytes | None:
+    """
+    Returns the string as bytes from the result.
+
+    .. code-block:: python
+
+        b: bytes | None = ots_result_bytes(result)
+
+        # if checked before with `ots_result_is_string`
+        # no need to check for None
+        b: bytes = ots_result_bytes(result)
+
+    :param result: The result to get the bytes from.
+    :result: ots_result_t | _CDataBase
+    :return: The string as bytes, or None if there is no string.
+    """
+    assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
+    out = lib.ots_result_string(_unwrap(result))
+    return ffi.string(out) if out != ffi.NULL else None
+
+
+def ots_result_bytes_copy(
+    result: ots_result_t | _CDataBase
+) -> bytes | None:
+    """
+    Returns a copy of the string as binary from the result.
+    (In Python this is the same result as ots_result_bytes)
+
+    .. warning::
+
+        This function copies the string, which is not necessary in Python as CFFI already does this. Do not use, use instead :py:func:`ots_result_bytes`.
+
+    :param result: The result to get the bytes from.
+    :type result: ots_result_t | _CDataBase
+    :return: A copy of the string as bytes, or None if there is no string.
+    """
+    assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
+    out = lib.ots_result_string_copy(_unwrap(result))
+    return ffi.string(out) if out != ffi.NULL else None
 
 
 def ots_result_boolean(

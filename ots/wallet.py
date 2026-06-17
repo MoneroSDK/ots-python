@@ -269,7 +269,7 @@ class Wallet:
         result: ots_result_t = ots_wallet_export_key_images(self.handle)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return ots_result_char_array(result)
+        return ots_result_bytes(result)
 
     def describeTransaction(self, tx: bytes) -> TxDescription:
         """
@@ -322,7 +322,7 @@ class Wallet:
         result: ots_result_t = ots_wallet_sign_tx(self.handle, tx)
         if ots_is_error(result):
             raise exception_from_result(result)
-        return ots_result_char_array(result)
+        return ots_result_bytes(result)
 
     def signData(self, data: bytes | str) -> str:
         """
