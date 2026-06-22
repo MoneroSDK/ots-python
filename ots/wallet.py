@@ -194,7 +194,7 @@ class Wallet:
             )
             if ots_is_error(result):
                 raise exception_from_result(result)
-            return tuple(
+            return (
                 ots_result_address_index_account(result),
                 ots_result_address_index_index(result)
             )
@@ -206,7 +206,7 @@ class Wallet:
         )
         if ots_is_error(result):
             raise exception_from_result(result)
-        return tuple(
+        return (
             ots_result_address_index_account(result),
             ots_result_address_index_index(result)
         )
