@@ -64,6 +64,7 @@ class Wallet:
             )
         return self._addresses[key]
 
+    # TODO: issues with the array I guess
     def accounts(self, max: int = 10, offset: int = 0) -> list[Address]:
         """
         Get a list of addresses in the wallet, with pagination.
@@ -80,6 +81,7 @@ class Wallet:
         addressHandles = ots_result_handle_array(result)
         return [Address(handle) for handle in addressHandles]
 
+    # TODO: issues with the array I guess if account > 0
     def subAddresses(self, account: int = 0, max: int = 10, offset: int = 0) -> list[Address]:
         """
         Get a list of sub-addresses for a specific account.
@@ -192,7 +194,10 @@ class Wallet:
             )
             if ots_is_error(result):
                 raise exception_from_result(result)
-            return tuple(ots_result_uint32_array(result))
+            return tuple(
+                ots_result_address_index_account(result),
+                ots_result_address_index_index(result)
+            )
         result: ots_result_t = ots_wallet_address_index(
             self.handle,
             address,
@@ -201,7 +206,10 @@ class Wallet:
         )
         if ots_is_error(result):
             raise exception_from_result(result)
-        return tuple(ots_result_uint32_array(result))
+        return tuple(
+            ots_result_address_index_account(result),
+            ots_result_address_index_index(result)
+        )
 
     def secretViewKey(self) -> WipeableString:
         """
