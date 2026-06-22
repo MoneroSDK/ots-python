@@ -200,7 +200,7 @@ class Wallet:
             )
         result: ots_result_t = ots_wallet_address_index(
             self.handle,
-            address,
+            address.handle,
             maxAccountDepth,
             maxIndexDepth
         )

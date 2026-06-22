@@ -3,7 +3,7 @@ from hashlib import sha256
 from setuptools import setup, find_packages
 
 
-VERSION = '0.4.6'
+VERSION = '0.4.7'
 environ['PYTHONHASHSEED'] = sha256(f'Monero OTS {VERSION}'.encode('utf-8')).hexdigest()
 
 
