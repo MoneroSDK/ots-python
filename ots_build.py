@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from tempfile import TemporaryDirectory
 from cffi import FFI
 from pathlib import PurePath
-from os import path, makedirs
+from os import path, makedirs, environ
 from re import sub, DOTALL
 from sys import exit
 
@@ -36,7 +36,7 @@ class FfiBuilderController(FFI):
         args=None
     ):
         self.library_path = library_path or []
-        self.include_path = include_path or []
+        self.include_path = include_path or [p for p in environ.get('OTS_INCLUDE_PATH', '').split(':')]
         self.library = library or LIBS
         self.output_dir = output_dir or path.join(path.dirname(__file__), "ots")
         self.cdef_header_file = cdef_header_file or CDEF_HEADER_FILES
