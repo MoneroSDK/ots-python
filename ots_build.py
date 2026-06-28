@@ -35,7 +35,7 @@ class FfiBuilderController(FFI):
         debug=False,
         args=None
     ):
-        self.library_path = library_path or []
+        self.library_path = library_path or [p for p in environ.get('OTS_LIBRARY_PATH', '').split(':')]
         self.include_path = include_path or [p for p in environ.get('OTS_INCLUDE_PATH', '').split(':')]
         self.library = library or LIBS
         self.output_dir = output_dir or path.join(path.dirname(__file__), "ots")

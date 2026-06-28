@@ -1,34 +1,8 @@
 # TODO
-- [x] Class structure
-- [x] cffi build
-- [x] raw wrapper for `_ots.o`
-- [X] Constants
-- [x] Enums
-- [x] Implement WipeableString class
-- [x] Implement Ots class
-- [x] Implement Address class
-- [x] Implement AddressString class
-- [x] Implement SeedIndices class
-- [x] Implement SeedLanguage class
-- [x] Implement Seed class
-- [x] Implement LegacySeed class
-- [x] Implement MoneroSeed class
-- [x] Implement Polyseed class
-- [x] Implement Wallet class
-- [x] Implement SeedJar class
-- [x] Implement TxDescription class
-- [x] Implement TxWarning class
-- [x] (P) Inline documentation
-- [x] Sphinx documentation
-- [x] setup.py: pip install script
-- [x] Automatic `_ots.o` build into /ots on pip install git+https://github.com/MoneroSDK/ots-python.git
-      will probably get a bit tricky
-- [x] setup.py: test
-- [x] drop ots_cdef.h generation, was only for debug purposes
 - [ ] Unit tests
 - [ ] Check all inline documentation again
 - [ ] Go through all TODO tags in the code, and remove TODO.md
-- [ ] (?) Rebuild Exceptions classes from C++ library
+- [x] (?) Rebuild Exceptions classes from C++ library
 - [ ] (S) procedural wrapper for `_ots.o`
 
 * S: skipped for now, will be done later.?
