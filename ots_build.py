@@ -7,14 +7,7 @@ from re import sub, DOTALL
 from sys import exit
 
 
-LIBS = [
-    'monero-ots',
-    'epee',
-    'easylogging',
-    'monero-crypto',
-    'monero-stubs',
-    'utf8proc'
-]  # Names of the library to link against (e.g., -lmonero-ots...)
+LIBS = []
 CDEF_HEADER_FILES = [
     'include/ots.h',
     'include/ots-errors.h'
