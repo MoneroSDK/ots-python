@@ -7,7 +7,7 @@ from re import sub, DOTALL
 from sys import exit
 
 
-LIBS = ['libmonero-ots']
+LIBS = ['monero-ots']
 CDEF_HEADER_FILES = [
     'include/ots.h',
     'include/ots-errors.h'
