@@ -327,7 +327,7 @@ class Wallet:
         :return: The signed transaction as bytes.
         """
         assert isinstance(tx, bytes), "tx must be bytes"
-        result: ots_result_t = ots_wallet_sign_tx(self.handle, tx)
+        result: ots_result_t = ots_wallet_sign_transaction(self.handle, tx)
         if ots_is_error(result):
             raise exception_from_result(result)
         return ots_result_bytes(result)
