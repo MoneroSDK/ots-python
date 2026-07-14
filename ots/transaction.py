@@ -93,12 +93,8 @@ class TxDescription:
         """
         Returns the transaction set as a byte string.
         """
-        if self._txSet is not None:
-            return self._txSet
-        result: ots_result_t = ots_tx_description_set(self.handle)
-        if ots_is_error(result):
-            raise exception_from_result(result)
-        self._txSet = ots_result_bytes(result)
+        if self._txSet is None:
+            self._txSet = ots_tx_description_tx_set(self.handle)
         return self._txSet
 
     @property
@@ -106,12 +102,8 @@ class TxDescription:
         """
         Returns the size of the transaction set.
         """
-        if self._txSetSize is not None:
-            return self._txSetSize
-        result: ots_result_t = ots_tx_description_set_size(self.handle)
-        if ots_is_error(result):
-            raise exception_from_result(result)
-        self._txSetSize = ots_result_number(result)
+        if self._txSetSize is None:
+            self._txSetSize = ots_tx_description_tx_set_size(self.handle)
         return self._txSetSize
 
     @property
@@ -119,12 +111,8 @@ class TxDescription:
         """
         Returns the total input amount for the transaction.
         """
-        if self._amountIn is not None:
-            return self._amountIn
-        result: ots_result_t = ots_tx_description_amount_in(self.handle)
-        if ots_is_error(result):
-            raise exception_from_result(result)
-        self._amountIn = ots_result_number(result)
+        if self._amountIn is None:
+            self._amountIn = ots_tx_description_amount_in(self.handle)
         return self._amountIn
 
     @property
@@ -132,12 +120,8 @@ class TxDescription:
         """
         Returns the total output amount for the transaction.
         """
-        if self._amountOut is not None:
-            return self._amountOut
-        result: ots_result_t = ots_tx_description_amount_out(self.handle)
-        if ots_is_error(result):
-            raise exception_from_result(result)
-        self._amountOut = ots_result_number(result)
+        if self._amountOut is None:
+            self._amountOut = ots_tx_description_amount_out(self.handle)
         return self._amountOut
 
     @property
@@ -147,7 +131,7 @@ class TxDescription:
         """
         if self._flows is not None:
             return self._flows
-        flow_count: int = ots_tx_description_flow_count(self.handle)
+        flow_count: int = ots_tx_description_flows_count(self.handle)
         self._flows = [
             Flow(
                 Address.fromString(ots_tx_description_flow_address(self.handle, i)),
@@ -177,12 +161,8 @@ class TxDescription:
         """
         Returns the transaction fee.
         """
-        if self._fee is not None:
-            return self._fee
-        result: ots_result_t = ots_tx_description_fee(self.handle)
-        if ots_is_error(result):
-            raise exception_from_result(result)
-        self._fee = ots_result_number(result)
+        if self._fee is None:
+            self._fee = ots_tx_description_fee(self.handle)
         return self._fee
 
     @property

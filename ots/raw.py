@@ -276,7 +276,7 @@ class ots_tx_description_t(_opaque_handle_t):
                     )
                 ],
                 ots_flow_vector_t(
-                    self.transfers[i].change_address.decode('utf-8'),
+                    ffi.string(self.transfers[i].change_address).decode('utf-8'),
                     self.transfers[i].change_amount
                 ) if self.transfers[i].change_address != ffi.NULL and self.transfers[i].change_amount > 0 else None,
                 self.ptr.transfers[i].fee,
@@ -4990,7 +4990,7 @@ def ots_tx_description_tx_set(
 
     :param tx_description: The handle of the transaction description.
     :type tx_description: ots_handle_t | _CDataBase
-    :return: A string representing the transaction set.
+    :return: Bytes representing the transaction set.
     """
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(tx_description).type) == HandleType.TX_DESCRIPTION, "tx_description must be of type HandleType.TX_DESCRIPTION"
@@ -5095,7 +5095,7 @@ def ots_tx_description_flow_address(
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(tx_description).type) == HandleType.TX_DESCRIPTION, "tx_description must be of type HandleType.TX_DESCRIPTION"
     assert isinstance(index, int), "index must be an integer"
-    return lib.ots_tx_description_flow_address(_unwrap(tx_description), index).decode('utf-8')
+    return ffi.string(lib.ots_tx_description_flow_address(_unwrap(tx_description), index)).decode('utf-8')
 
 
 def ots_tx_description_flow_amount(
@@ -5363,7 +5363,7 @@ def ots_tx_description_transfer_flow_address(
     assert HandleType(_unwrap(tx_description).type) == HandleType.TX_DESCRIPTION, "tx_description must be of type HandleType.TX_DESCRIPTION"
     assert isinstance(index, int), "index must be an integer"
     assert isinstance(flow_index, int), "flow_index must be an integer"
-    return lib.ots_tx_description_transfer_flow_address(_unwrap(tx_description), index, flow_index).decode('utf-8')
+    return ffi.string(lib.ots_tx_description_transfer_flow_address(_unwrap(tx_description), index, flow_index)).decode('utf-8')
 
 
 def ots_tx_description_transfer_flow_amount(
@@ -5436,7 +5436,7 @@ def ots_tx_description_transfer_change_address(
     assert isinstance(tx_description, (ots_handle_t, _CDataBase)), "tx_description must be an instance of ots_handle_t or _CDataBase"
     assert HandleType(_unwrap(tx_description).type) == HandleType.TX_DESCRIPTION, "tx_description must be of type HandleType.TX_DESCRIPTION"
     assert isinstance(index, int), "index must be an integer"
-    return lib.ots_tx_description_transfer_change_address(_unwrap(tx_description), index).decode('utf-8')
+    return ffi.string(lib.ots_tx_description_transfer_change_address(_unwrap(tx_description), index)).decode('utf-8')
 
 
 def ots_tx_description_transfer_change_amount(
