@@ -68,8 +68,10 @@ class ots_result_t(_opaque_handle_t):
         Frees the underlying C data type before the object is deleted.
         """
         if self.ptrptr:
-            lib.ots_free_result(self.ptrptr)
-            ffi.release(self.ptrptr)
+            if lib is not None:
+                lib.ots_free_result(self.ptrptr)
+            if ffi is not None:
+                ffi.release(self.ptrptr)
 
 
 class ots_handle_t(_opaque_handle_t):
@@ -107,10 +109,11 @@ class ots_handle_t(_opaque_handle_t):
         """
         Frees the underlying C data type when the object is deleted.
         """
-        if self.ptrptr:
-            if not self.reference:
+        if self.ptrptr is not None:
+            if not self.reference and lib is not None:
                 lib.ots_free_handle(self.ptrptr)
-            ffi.release(self.ptrptr)
+            if ffi is not None:
+                ffi.release(self.ptrptr)
 
     @property
     def type(self) -> HandleType:
@@ -1298,7 +1301,7 @@ def ots_result_bytes(result: ots_result_t | _CDataBase) -> bytes | None:
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     out = lib.ots_result_string(_unwrap(result))
-    return ffi.string(out) if out != ffi.NULL else None
+    return ffi.unpack(out, lib.ots_result_size(_unwrap(result))) if out != ffi.NULL else None
 
 
 def ots_result_bytes_copy(
@@ -1318,7 +1321,7 @@ def ots_result_bytes_copy(
     """
     assert _is_result(result), REQUIRE__OTS_RESULT_T__OR__CDATA_BASE
     out = lib.ots_result_string_copy(_unwrap(result))
-    return ffi.string(out) if out != ffi.NULL else None
+    return ffi.unpack(out, lib.ots_result_size(_unwrap(result))) if out != ffi.NULL else None
 
 
 def ots_result_boolean(

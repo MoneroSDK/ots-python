@@ -64,7 +64,6 @@ class Wallet:
             )
         return self._addresses[key]
 
-    # TODO: issues with the array I guess
     def accounts(self, max: int = 10, offset: int = 0) -> list[Address]:
         """
         Get a list of addresses in the wallet, with pagination.
@@ -78,10 +77,9 @@ class Wallet:
         result: ots_result_t = ots_wallet_accounts(self.handle, max, offset)
         if ots_is_error(result):
             raise exception_from_result(result)
-        addressHandles = ots_result_handle_array(result)
+        addressHandles = ots_result_handle_array_reference(result)
         return [Address(handle) for handle in addressHandles]
 
-    # TODO: issues with the array I guess if account > 0
     def subAddresses(self, account: int = 0, max: int = 10, offset: int = 0) -> list[Address]:
         """
         Get a list of sub-addresses for a specific account.
@@ -95,7 +93,7 @@ class Wallet:
         result: ots_result_t = ots_wallet_subaddresses(self.handle, account, max, offset)
         if ots_is_error(result):
             raise exception_from_result(result)
-        addressHandles = ots_result_handle_array(result)
+        addressHandles = ots_result_handle_array_reference(result)
         return [Address(handle) for handle in addressHandles]
 
     def hasAddress(
