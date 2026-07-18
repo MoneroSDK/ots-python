@@ -67,13 +67,10 @@ class ots_result_t(_opaque_handle_t):
         """
         Frees the underlying C data type before the object is deleted.
         """
-        print(f'ots_result_t.del(): {self.ptrptr}')
         if self.ptrptr:
             if lib is not None:
-                print(f'ots_free_result: {self.ptrptr}')
                 lib.ots_free_result(self.ptrptr)
             if ffi is not None and self.ptr is not None:
-                print(f'release result: {self.ptrptr}')
                 ffi.release(self.ptrptr)
 
 
@@ -112,13 +109,10 @@ class ots_handle_t(_opaque_handle_t):
         """
         Frees the underlying C data type when the object is deleted.
         """
-        print(f'ots_handle_t.del(): {self.ptrptr}')
         if self.ptrptr is not None:
             if not self.reference and lib is not None:
-                print(f'ots_free_handle: {self.ptrptr}')
                 lib.ots_free_handle(self.ptrptr)
             if ffi is not None:
-                print(f'release handle: {self.ptrptr}')
                 ffi.release(self.ptrptr)
 
     @property
