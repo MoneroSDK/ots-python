@@ -617,7 +617,7 @@ class SeedJar:
         ]
 
     @staticmethod
-    def contains(seed: Seed | str) -> bool
+    def contains(seed: Seed | str) -> bool:
         """
         Check if there is a seed or address in the jar with the same address.
 
