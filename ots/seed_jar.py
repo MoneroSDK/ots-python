@@ -66,7 +66,7 @@ class SeedJar:
     """
 
     @staticmethod
-    def add(seed: Seed, name: str | None) -> Seed:
+    def add(seed: Seed, name: str | None = None) -> Seed:
         """
         Add a seed to the jar with a given name.
 
@@ -156,7 +156,7 @@ class SeedJar:
     @staticmethod
     def transferIn(
         seed: Seed | ots_handle_t,
-        name: str | None
+        name: str | None = None
     ) -> Seed:
         """
         Transfer a seed into the jar with a given name.
