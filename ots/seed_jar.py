@@ -625,7 +625,7 @@ class SeedJar:
         :return: True if the seed with the address or address is in the jar.
         """
         address = seed.address.base58 if isinstance(seed, Seed) else seed
-        return address in [s.address.base58 for s in SeedJar.items()]
+        return address in [s.address for s in SeedJar.items()]
 
     @staticmethod
     def itemWallet(index: int) -> Wallet:
