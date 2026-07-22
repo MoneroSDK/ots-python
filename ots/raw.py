@@ -3089,7 +3089,7 @@ def ots_seed_address(handle: ots_handle_t | _CDataBase) -> ots_result_t:
         result = ots_seed_address(seed)
         address: ots_handle_t = ots_result_handle(result)
         result = ots_address_base58_string(address)
-        assert len(ots_result_string(address)) == 95  # Monero addresses are 95 characters long
+        assert len(ots_result_string(result)) == 95  # Monero addresses are 95 characters long
 
     :param handle: The handle of the seed.
     :return: ots_result_t containing the address of the seed.

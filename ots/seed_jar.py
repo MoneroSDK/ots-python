@@ -66,15 +66,17 @@ class SeedJar:
     """
 
     @staticmethod
-    def add(seed: Seed, name: str) -> Seed:
+    def add(seed: Seed, name: str | None) -> Seed:
         """
         Add a seed to the jar with a given name.
 
         :param Seed seed: The seed to add.
-        :param str name: The name to associate with the seed.
+        :param str name: The name to associate with the seed. If no name is provided, the name will be the seeds address.
         :return: The reference to the added seed. Now you can dispose the provided seed.
         """
         assert isinstance(seed, Seed), "seed must be an instance of Seed"
+        if name is None:
+            name = seed.address.base58
         assert isinstance(name, str), "name must be a string"
         result: ots_result_t = ots_seed_jar_add_seed(seed.handle, name)
         if ots_is_error(result):
@@ -152,16 +154,30 @@ class SeedJar:
         return ots_result_boolean(result)
 
     @staticmethod
-    def transferIn(seed: Seed | ots_handle_t, name: str) -> Seed:
+    def transferIn(
+        seed: Seed | ots_handle_t,
+        name: str | None
+    ) -> Seed:
         """
         Transfer a seed into the jar with a given name.
 
         :param Seed | ots_handle_t seed: The seed to transfer in. Don't use the provided seed after this operation, because it will be wiped.
-        :param str name: The name to associate with the seed.
+        :param str name: The name to associate with the seed. If no name is provided, the name will be the seeds address.
         :return: The reference to the transferred seed. The provided seed is now wiped.
         """
         assert isinstance(seed, (Seed, ots_handle_t)), "seed must be an instance of Seed or ots_handle_t"
         assert isinstance(seed, Seed) or seed.type == HandleType.SEED, "seed must be a Seed handle"
+        if name is None:
+            if isinstance(seed, Seed):
+                name = seed.address.base58
+            else:
+                r = ots_seed_address(seed)
+                address = ots_result_handle(r)
+                ots_free_result(r)
+                r = ots_address_base58_string(address)
+                name = ots_result_string(r)
+                ots_free_result(r)
+                ots_free_handle(address)
         assert isinstance(name, str), "name must be a string"
         result: ots_result_t = ots_seed_jar_transfer_seed_in(
             seed.handle if isinstance(seed, Seed) else seed,
@@ -599,6 +615,17 @@ class SeedJar:
             )
             for i in range(SeedJar.count())
         ]
+
+    @staticmethod
+    def contains(seed: Seed | str) -> bool
+        """
+        Check if there is a seed or address in the jar with the same address.
+
+        :param Seed|str index: The seed or address string to query.
+        :return: True if the seed with the address or address is in the jar.
+        """
+        address = seed.address.base58 if isinstance(seed, Seed) else seed
+        return address in [s.address.base58 for s in SeedJar.items()]
 
     @staticmethod
     def itemWallet(index: int) -> Wallet:
